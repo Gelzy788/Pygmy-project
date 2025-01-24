@@ -57,6 +57,7 @@ def set_path():
             if pygame.key.get_pressed()[pygame.K_z] and pygame.key.get_mods() & pygame.KMOD_LCTRL:
                 if len(screens) > 1:
                     screens.pop()
+                    temp_paths.pop()
         if change:
             screen.blit(screens[-1], (0, 0))
         clock.tick(fps)
