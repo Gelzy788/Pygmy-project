@@ -1,4 +1,4 @@
-from particle import Particle
+from ray_cast.particle import Particle
 import pygame as pg
 
 drawline = pg.draw.line

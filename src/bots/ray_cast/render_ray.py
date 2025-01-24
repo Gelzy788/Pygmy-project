@@ -1,15 +1,15 @@
 import pygame as pg
 from random import randint
 
-from boundary import Boundary
-from particle import Particle
-from ray import Ray
+from ray_cast.boundary import Boundary
+from ray_cast.particle import Particle
+from ray_cast.ray import Ray
 
 
 def setup():
     ### CONFIG
-    screen_w = 1000
-    screen_h = 1000
+    screen_w = 800
+    screen_h = 800
     border_on = True
     num_walls = 6
     num_rays = 45
