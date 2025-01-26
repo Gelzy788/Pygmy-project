@@ -10,11 +10,11 @@ class Ray:
         self.heading = heading
         self.end: pg.math.Vector2 = pg.math.Vector2()
         self.image = None
-        self.length = 100  # длина луча
+        self.length = 300  # длина луча
 
-    def update(self, screen: pg.display, p: Particle, boundaries: list):
+    def update(self, screen: pg.display, p: Particle, boundaries: list, angle_rotation: int=0):
         self.start = p.pos
-        self.end.from_polar((10000, self.heading))
+        self.end.from_polar((10000, self.heading - angle_rotation))
 
         closest = float("inf")
         new_end = pg.Vector2()
@@ -45,14 +45,7 @@ class Ray:
                 dist = self.start.distance_to((x, y))
                 if dist < closest:
                     closest = dist
-                    new_end.xy = x, y
-
-        # if closest == float("inf"):
-        #     self.end = self.start
-        #     self.image = None
-        # else:
-        #     self.end = new_end
-        #     self.image = drawline(screen, (100, 100, 100), self.start, self.end, 1)
+                    new_end.xy = x, y # точка пересечения
 
         # отладка
         # print(f"Start: {self.start}, End: {self.end}")
@@ -68,6 +61,6 @@ class Ray:
         # Ограничиваем длину луча до self.length
         if self.start.distance_to(self.end) > self.length:
             direction = (self.end - self.start).normalize()  # Нормализуем вектор направления
-            self.end = self.start + direction * self.length  # Устанавливаем конечную точку на максимальной длине 50
+            self.end = self.start + direction * self.length  # Устанавливаем конечную точку на максимальной длине
 
         self.image = drawline(screen, (100, 100, 100), self.start, self.end, 1)

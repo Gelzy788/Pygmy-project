@@ -3,14 +3,15 @@ from random import randint
 
 
 class Particle:
-    def __init__(self, speed=1):
+    def __init__(self, speed=1, current_angle=0.0):
         info = pg.display.Info()
         self.image = None
         pg.math.Vector2()
         # self.pos = pg.Vector2(randint(0, info.current_w), randint(0, info.current_h))
-        self.pos = pg.Vector2(info.current_w // 2, info.current_h // 2)  ##
+        self.pos = pg.Vector2(info.current_w // 2, info.current_h // 2)  ## начальная позиция
         self.speed = speed  # Скорость (в точках за секунду)
         self.heading = 0
+        self.current_angle = current_angle
         self.vel = pg.math.Vector2((0, 0))
 
     def update(self, screen: pg.display, x, y):

@@ -67,7 +67,6 @@ from set_path.set_paths import set_path
 #  }
 
 def main():
-    # Инициализация
     set_up = setup()
     set_path()
 
@@ -80,7 +79,7 @@ def main():
     for i in range(len(templates)):
         particles[f'bot_{i}'] = Particle(speed=templates[f'bot_{i}']['speed'])
 
-    rays = {key: [Ray(p, i * -135 / 45 - 45) for i in range(45)] for key, p in particles.items()}
+    rays = {key: [Ray(p, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, p in particles.items()}
     boundaries = []
     paths = {
         bot: [(x, y) for x, y in data["path"]]

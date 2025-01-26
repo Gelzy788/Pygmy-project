@@ -1,4 +1,5 @@
 import json
+import math
 
 
 # paths = {
@@ -15,8 +16,20 @@ import json
 #     (137, 50), (137, 52), (137, 54)
 #     ]
 # }
+'''
+x1, y1 = 1, 1
+x2, y2 = 4, 5
 
+# Разница координат
+delta_x = x2 - x1
+delta_y = y2 - y1
 
+# Угол в радианах
+theta_radians = math.atan2(y2 - y1, x2 - x1)
+
+# Угол в градусах
+theta_degrees = round(math.degrees(math.atan2(y2 - y1, x2 - x1)))
+'''
 
 # paths = {'bot_0': 
 #     {'path': [
