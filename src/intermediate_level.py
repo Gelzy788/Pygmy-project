@@ -13,10 +13,10 @@ done = False
 hp = 100
 protection_chance = 0
 speed = 3
-stealth = [8, 10]  # Изменил на список для возможности модификации
+stealth = [8, 10]
 damage = 50
 blood_points = 0
-improve_menu_active = False  # Добавляем флаг для отслеживания состояния меню
+improve_menu_active = False  # Флаг для отслеживания состояния меню
 
 # Добавляем шрифт для отображения очков и меню
 font = pygame.font.Font(None, 36)
