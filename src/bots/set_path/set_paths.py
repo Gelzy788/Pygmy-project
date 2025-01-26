@@ -12,11 +12,9 @@ def smooth_path(path, min_distance=10):
 
     for point in path[1:]:
         distance = math.sqrt((point[0] - last_point[0]) ** 2 + (point[1] - last_point[1]) ** 2)
-        print(distance, distance >= min_distance, last_point, point)
         if distance >= min_distance:
             smoothed.append(point)
             last_point = point
-    print('return', smoothed)
     return smoothed
 
 
@@ -26,46 +24,9 @@ def writing_to_json(paths):
         # Применяем smooth_path для каждого пути
         smoothed_path = smooth_path(bot_data["path"])
         updated_paths[bot_name] = {**bot_data, "path": smoothed_path}  # Обновляем путь в новом словаре
-        print(f"Original path for {bot_name}: {bot_data['path']}")
-        print(f"Smoothed path for {bot_name}: {smoothed_path}")
-
-    print('updated_paths', updated_paths)
     with open('src/bots/set_path/paths.json', 'w') as f:
         json.dump(updated_paths, f, indent=2)
 
-'''
-def smooth_path(path, min_distance=100):
-    if not path:
-        return []
-
-    smoothed = [path[0]]  # Начинаем с первой точки
-
-    for i in range(1, len(path)):
-        current_point = pygame.Vector2(path[i])
-        last_point = pygame.Vector2(smoothed[-1])
-
-        # Вычисляем расстояние между текущей и последней точкой
-        dist = current_point.distance_to(last_point)
-
-        # Если расстояние больше минимального порога, добавляем точку
-        if dist > min_distance:
-            smoothed.append(path[i])
-
-    return smoothed
-
-
-def writing_to_json(paths):
-    with open('src/bots/set_path/paths.json', 'w') as f:
-        # Обновляем только пути для каждого бота
-        updated_paths = {
-            bot_name: {"path": smooth_path(bot_data["path"]), **bot_data}
-            for bot_name, bot_data in paths.items()
-        }
-        json.dump(updated_paths, f, indent=2)
-'''
-    # with open('set_path/paths.json') as f:
-    #     print(f.read())
-# data = {bot_name: {"path": smooth_path(bot_data["path"]), **bot_data} for bot_name, bot_data in paths.items()}
 
 def set_path():
     pygame.init()
