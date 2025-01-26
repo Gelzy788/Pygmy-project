@@ -117,8 +117,6 @@ def set_path():
                 if len(screens) > 1:
                     screens.pop()
                     temp_paths.pop()
-
-                    temp_paths.pop()
         if change:
             screen.blit(screens[-1], (0, 0))
         clock.tick(fps)
