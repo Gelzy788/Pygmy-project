@@ -183,13 +183,10 @@ class WaveDamage(pygame.sprite.Sprite):
         self.warning_time = 60
         self.damage_dealt = False
         self.activated = False
-        self.lifetime = 15 * 60
 
     def update(self, player):
         if not self.activated:
             return
-
-        self.lifetime -= 1
 
         if self.warning_time > 0:
             self.warning_time -= 1
@@ -204,9 +201,7 @@ class WaveDamage(pygame.sprite.Sprite):
                     player.hp -= 25
                 self.damage_dealt = True
                 self.image.fill((255, 0, 0))
-
-        if self.lifetime <= 0:
-            self.kill()
+            self.kill()  # Удаляем сегмент сразу после взрыва
 
 
 class VerticalBeam(pygame.sprite.Sprite):
@@ -256,6 +251,10 @@ class Boss(pygame.sprite.Sprite):
         self.projectiles = pygame.sprite.Group()
         self.hp = 500
         self.max_hp = 500
+        self.shield_active = False
+        self.shield_cooldown = 0
+        self.shield_duration = 180  # 3 секунды
+        self.shield_color = (0, 255, 255, 128)  # Голубой полупрозрачный
         self.big_attack_cooldown = 0
         self.wave_attack_cooldown = 0
         self.wave_segments = pygame.sprite.Group()
@@ -267,6 +266,15 @@ class Boss(pygame.sprite.Sprite):
         self.vertical_beam = None
         self.vertical_attack_cooldown = 0
         self.vertical_beams = pygame.sprite.Group()
+
+    def activate_shield(self):
+        if self.shield_cooldown <= 0:
+            self.shield_active = True
+            self.shield_cooldown = 360
+
+    def deactivate_shield(self):
+        self.shield_active = False
+        self.shield_duration = 180  # Сбрасываем длительность для следующего использования
 
     def draw_hp_bar(self, screen):
         bar_width = self.width
@@ -308,6 +316,8 @@ class Boss(pygame.sprite.Sprite):
             self.current_wave_position = self.rect.x
             self.wave_attack_cooldown = 240
             self.wave_delay = 0
+            self.wave_segments.empty()
+            self.last_segment = None
 
     def VerticalBeamAttack(self, target_x):
         if self.vertical_attack_cooldown <= 0:
@@ -318,6 +328,16 @@ class Boss(pygame.sprite.Sprite):
             self.vertical_attack_cooldown = 360
 
     def update(self, player):
+        # Обновление щита
+        if self.shield_active:
+            self.shield_duration -= 1
+            if self.shield_duration <= 0:
+                self.shield_active = False
+                self.shield_duration = 180
+
+        if self.shield_cooldown > 0:
+            self.shield_cooldown -= 1
+
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
         if self.big_attack_cooldown > 0:
@@ -398,6 +418,23 @@ class Boss(pygame.sprite.Sprite):
                     0, min(player.rect.x, WIDTH - player.rect.width))
                 player.rect.y = max(
                     0, min(player.rect.y, HEIGHT - player.rect.height))
+
+    def draw(self, screen):
+        # Отрисовка босса
+        screen.blit(self.image, self.rect)
+
+        # Отрисовка щита
+        if self.shield_active:
+            shield_surface = pygame.Surface(
+                (self.width + 20, self.height + 20), pygame.SRCALPHA)
+            pygame.draw.rect(shield_surface, self.shield_color,
+                             (0, 0, self.width + 20, self.height + 20),
+                             border_radius=10)
+            screen.blit(shield_surface,
+                        (self.rect.x - 10, self.rect.y - 10))
+
+        # Отрисовка полоски здоровья
+        self.draw_hp_bar(screen)
 
 
 def draw_death_menu(screen):
@@ -509,6 +546,9 @@ def game_loop():
             mouse_x, mouse_y = pygame.mouse.get_pos()
             boss.VerticalBeamAttack(mouse_x)
 
+        if keys[pygame.K_c]:
+            boss.activate_shield()
+
         old_y = player.rect.y
 
         player.update()
@@ -526,6 +566,8 @@ def game_loop():
         for sprite in all_sprites:
             if isinstance(sprite, Player):
                 pygame.draw.rect(screen, RED, sprite.rect)
+            elif isinstance(sprite, Boss):
+                boss.draw(screen)  # Используем новый метод draw
             else:
                 screen.blit(sprite.image, sprite.rect)
 
@@ -538,9 +580,11 @@ def game_loop():
             f'HP: {player.hp}', True, (0, 0, 0))
         screen.blit(hp_text, (10, 10))
 
+        # Проверяем попадания снарядов игрока в босса
         for player_projectile in player.projectiles:
             if player_projectile.rect.colliderect(boss.rect):
-                boss.hp -= 10
+                if not boss.shield_active:  # Проверяем наличие щита
+                    boss.hp -= 10
                 player_projectile.kill()
                 if boss.hp <= 0:
                     return "victory"
