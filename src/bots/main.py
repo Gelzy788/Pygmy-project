@@ -4,6 +4,7 @@ from ray_cast.render_ray import setup, render_ray
 from ray_cast.particle import Particle
 from ray_cast.ray import Ray
 from set_path.set_paths import set_path
+from bot import Bot
 
 # paths = {
 #     "object_1": [
@@ -66,28 +67,36 @@ from set_path.set_paths import set_path
 #     ]
 #  }
 
+
 def main():
+    pg.init()
+
     set_up = setup()
     set_path()
 
-    particles = {}
+    # particles = {}
+    all_sprites = pg.sprite.Group()
+    bots: dict[str, Bot] = {}
+    
     with open('src/bots/set_path/paths.json') as f:
         templates: dict = json.load(f)
         # print(len(templates))
     
     # Создание объектов (частицы, лучи, границы)
     for i in range(len(templates)):
-        particles[f'bot_{i}'] = Particle(speed=templates[f'bot_{i}']['speed'])
-
-    rays = {key: [Ray(p, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, p in particles.items()}
+        # particles[f'bot_{i}'] = Particle(speed=templates[f'bot_{i}']['speed'])
+        bots[f'bot_{i}'] = Bot(
+            all_sprites, i, templates[f'bot_{i}']['path'], 
+            Particle(speed=templates[f'bot_{i}']['speed']), 0, 1)
+    
+    rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, bot in bots.items()}
     boundaries = []
-    paths = {
-        bot: [(x, y) for x, y in data["path"]]
-        for bot, data in templates.items()
-    }
-    # Запуск игры
+    # paths = {
+    #     bot: [(x, y) for x, y in data["path"]]
+    #     for bot, data in templates.items()
+    # }
 
-    render_ray(set_up, particles, rays, boundaries, paths)
+    render_ray(set_up, bots, rays, boundaries, all_sprites)
 
 if __name__ == "__main__":
     main()

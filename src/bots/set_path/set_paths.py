@@ -2,21 +2,44 @@ import pygame
 import json
 import math
 
+# сделать сглаживание пути, наоборот
+# добовлять дополнительные точки между теми у которых большое расстояние
+# !
+# !
+# !
+# !
+# !
+# проблема с ctrl + z
 
-def smooth_path(path, min_distance=10):
+
+
+def smooth_path(path):
+    n = 50 # задержка
     if not path:
         return []
 
-    smoothed = [path[0]]  # Начинаем с первой точки
-    last_point = path[0]
+    smoothed = []
+    smoothed += [path[0]] * (n - 1)
+    for i in range(len(path) - 1):
+        x0, y0 = path[i][0], path[i][1]
+        x1, y1 = path[i + 1][0], path[i + 1][1]
+        if math.sqrt((x0 - x1) ** 2 + (y0 - y1) ** 2) == 1:
+            smoothed.append((x0, y0))
+            continue
+        
+        while not(x0 == x1 and y0 == y1):
+            smoothed.append((x0, y0))
+            x_d = x1 - x0
+            y_d = y1 - y0
+            if abs(x_d) == abs(y_d):
+                x0 += x_d // abs(x_d)
+                y0 += y_d // abs(y_d)
+            elif abs(x_d) > abs(y_d):
+                x0 += x_d // abs(x_d)
+            else:
+                y0 += y_d // abs(y_d)
+    smoothed += [path[-1]] * n
 
-    for point in path[1:]:
-        distance = math.sqrt((point[0] - last_point[0]) ** 2 + (point[1] - last_point[1]) ** 2)
-        print(distance, distance >= min_distance, last_point, point)
-        if distance >= min_distance:
-            smoothed.append(point)
-            last_point = point
-    print('return', smoothed)
     return smoothed
 
 
@@ -27,45 +50,12 @@ def writing_to_json(paths):
         smoothed_path = smooth_path(bot_data["path"])
         updated_paths[bot_name] = {**bot_data, "path": smoothed_path}  # Обновляем путь в новом словаре
         print(f"Original path for {bot_name}: {bot_data['path']}")
-        print(f"Smoothed path for {bot_name}: {smoothed_path}")
+        # print(f"Smoothed path for {bot_name}: {smoothed_path}")
 
-    print('updated_paths', updated_paths)
+    # print('updated_paths', updated_paths)
     with open('src/bots/set_path/paths.json', 'w') as f:
         json.dump(updated_paths, f, indent=2)
 
-'''
-def smooth_path(path, min_distance=100):
-    if not path:
-        return []
-
-    smoothed = [path[0]]  # Начинаем с первой точки
-
-    for i in range(1, len(path)):
-        current_point = pygame.Vector2(path[i])
-        last_point = pygame.Vector2(smoothed[-1])
-
-        # Вычисляем расстояние между текущей и последней точкой
-        dist = current_point.distance_to(last_point)
-
-        # Если расстояние больше минимального порога, добавляем точку
-        if dist > min_distance:
-            smoothed.append(path[i])
-
-    return smoothed
-
-
-def writing_to_json(paths):
-    with open('src/bots/set_path/paths.json', 'w') as f:
-        # Обновляем только пути для каждого бота
-        updated_paths = {
-            bot_name: {"path": smooth_path(bot_data["path"]), **bot_data}
-            for bot_name, bot_data in paths.items()
-        }
-        json.dump(updated_paths, f, indent=2)
-'''
-    # with open('set_path/paths.json') as f:
-    #     print(f.read())
-# data = {bot_name: {"path": smooth_path(bot_data["path"]), **bot_data} for bot_name, bot_data in paths.items()}
 
 def set_path():
     pygame.init()

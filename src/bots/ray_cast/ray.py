@@ -10,7 +10,7 @@ class Ray:
         self.heading = heading
         self.end: pg.math.Vector2 = pg.math.Vector2()
         self.image = None
-        self.length = 300  # длина луча
+        self.length = 100  # длина луча
 
     def update(self, screen: pg.display, p: Particle, boundaries: list, angle_rotation: int=0):
         self.start = p.pos
