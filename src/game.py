@@ -1,7 +1,7 @@
 import pygame
 import random
 from settings import WIDTH, WHITE, RED, FPS, screen
-from player import Player
+from boss_fight_player import Player
 from boss import Boss
 from projectile import BigProjectile
 from utils import draw_death_menu
