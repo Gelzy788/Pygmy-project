@@ -1,0 +1,90 @@
+{
+    "default_fight": {
+        "shield_sequence": [
+            {
+                "time": 180,
+                "action": "activate"
+            },
+            {
+                "time": 300,
+                "action": "deactivate"
+            },
+            {
+                "time": 420,
+                "action": "activate"
+            },
+            {
+                "time": 540,
+                "action": "deactivate"
+            }
+        ],
+        "attack_sequence": [
+            {
+                "time": 180,
+                "attack": "attraction"
+            },
+            {
+                "time": 300,
+                "attack": "wave"
+            },
+            {
+                "time": 420,
+                "attack": "big"
+            },
+            {
+                "time": 540,
+                "attack": "vertical"
+            }
+        ],
+        "random_attacks": {
+            "start_time": 720,
+            "interval": 180,
+            "attacks": [
+                "attraction",
+                "wave",
+                "big",
+                "vertical",
+                "shield"
+            ]
+        }
+    },
+    "aggressive_fight": {
+        "shield_sequence": [
+            {
+                "time": 120,
+                "action": "activate"
+            },
+            {
+                "time": 180,
+                "action": "deactivate"
+            }
+        ],
+        "attack_sequence": [
+            {
+                "time": 60,
+                "attack": "big"
+            },
+            {
+                "time": 120,
+                "attack": "wave"
+            },
+            {
+                "time": 180,
+                "attack": "vertical"
+            },
+            {
+                "time": 240,
+                "attack": "attraction"
+            }
+        ],
+        "random_attacks": {
+            "start_time": 360,
+            "interval": 120,
+            "attacks": [
+                "big",
+                "wave",
+                "vertical"
+            ]
+        }
+    }
+}

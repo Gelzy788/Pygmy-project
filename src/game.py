@@ -5,28 +5,24 @@ from boss_fight_player import Player
 from boss import Boss
 from projectile import BigProjectile
 from utils import draw_death_menu
+from boss_script_manager import BossScriptManager
 
 
-def scripted_boss_fight():
+def scripted_boss_fight(script_name="default_fight"):
     all_sprites = pygame.sprite.Group()
     clock = pygame.time.Clock()
     player = Player(all_sprites)
     boss = Boss(all_sprites)
 
-    # Упрощенный скрипт с щитом
-    shield_sequence = [
-        {"time": 180, "action": "activate"},   # 3 сек - включить щит
-        {"time": 300, "action": "deactivate"},  # 5 сек - выключить щит
-        {"time": 420, "action": "activate"},   # 7 сек - снова включить
-        {"time": 540, "action": "deactivate"},  # 9 сек - снова выключить
-    ]
+    # Загружаем скрипт боя
+    script_manager = BossScriptManager()
+    if not script_manager.load_script(script_name):
+        print(f"Error: Script '{script_name}' not found!")
+        return "quit"
 
-    attack_sequence = [
-        {"time": 180, "attack": "attraction"},
-        {"time": 300, "attack": "wave"},
-        {"time": 420, "attack": "big"},
-        {"time": 540, "attack": "vertical"},
-    ]
+    shield_sequence = script_manager.get_shield_sequence()
+    attack_sequence = script_manager.get_attack_sequence()
+    random_attacks = script_manager.get_random_attack_config()
 
     frame_counter = 0
     mouse_x, mouse_y = 400, 300
@@ -91,10 +87,9 @@ def scripted_boss_fight():
                     boss.VerticalBeamAttack(mouse_x)
 
         # Случайные атаки после заскриптованной последовательности
-        if frame_counter > 720:  # После 12 секунд
-            if random.randint(0, 180) == 0:  # Примерно раз в 3 секунды
-                attack_type = random.choice(
-                    ["attraction", "wave", "big", "vertical", "shield"])
+        if random_attacks and frame_counter > random_attacks["start_time"]:
+            if random.randint(0, random_attacks["interval"]) == 0:
+                attack_type = random.choice(random_attacks["attacks"])
                 if attack_type == "attraction":
                     boss.AttractionAttack(player)
                 elif attack_type == "wave":
@@ -102,7 +97,7 @@ def scripted_boss_fight():
                 elif attack_type == "big":
                     boss.BigProjectileAttack(player)
                 elif attack_type == "vertical":
-                    x = random.randint(100, 700)  # Случайная позиция по X
+                    x = random.randint(100, 700)
                     boss.VerticalBeamAttack(x)
                 elif attack_type == "shield":
                     boss.activate_shield()
@@ -190,7 +185,8 @@ def scripted_boss_fight():
 
 def main():
     while True:
-        result = scripted_boss_fight()
+        # Можно выбирать разные скрипты боя
+        result = scripted_boss_fight("aggressive_fight")
         if result == "quit":
             break
         elif result == "victory":
