@@ -86,6 +86,8 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+            # if ... обновление игрока
+            # здесь обрабатывать движения игрока??? <---------------------------------<<<
 
         screen.fill((0, 0, 0))
 
@@ -103,7 +105,7 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         k += 1
         # print(k)
         pg.display.flip()
-        clock.tick(60)
+        clock.tick(360)
         pg.display.update()
         pg.time.wait(25) # надо убирать, пока что оставил, т.к. у меня из-за этого боты не дергаются
 

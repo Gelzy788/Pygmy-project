@@ -43,7 +43,7 @@ def start_round():
     for i in range(len(templates)):
         bots[f'bot_{i}'] = Bot(
             bot_sprites, i, templates[f'bot_{i}']['path'], 
-            Particle(speed=templates[f'bot_{i}']['speed']), 0, 1)
+            Particle(speed=5), 0, 1)
     
     rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, bot in bots.items()}
     boundaries = []

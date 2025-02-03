@@ -6,19 +6,6 @@ from ray_cast.particle import Particle
 from ray_cast.ray import Ray
 
 
-
-'''
-class Bomb(pygame.sprite.Sprite):
-    image = load_image("bot.png")
-    image_boom = load_image("bot.png")
-
-    def __init__(self, group):
-        # НЕОБХОДИМО вызвать конструктор родительского класса Sprite. 
-        # Это очень важно !!!
-        super().__init__(group)
-        self.image = Bomb.image'''
-
-
 def load_image(name, colorkey=None, scale=1):
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
