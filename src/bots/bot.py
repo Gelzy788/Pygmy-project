@@ -36,11 +36,6 @@ def load_image(name, colorkey=None, scale=1):
     
     return image
 
-# вероятно будут проблемы со столкнавением ботов при спавне друг с другом
-# while pygame.sprite.spritecollideany(self, group):
-#     self.rect.x = random.randrange(width - 50)
-#     self.rect.y = random.randrange(height - 50)
-#     print(self.rect.x, self.rect.y)
 
 class Bot(pygame.sprite.Sprite):
     image_bot = load_image("bot.png", scale=0.5)
@@ -72,7 +67,7 @@ class Bot(pygame.sprite.Sprite):
             index = 0
             self.direction = 1  # Меняем направление на прямое
         
-            # Получаем координаты текущей точки пути
+        # Получаем координаты текущей точки пути
         x, y = self.path[int(index)]
 
         if self.direction == 1:

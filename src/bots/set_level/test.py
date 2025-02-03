@@ -1,5 +1,6 @@
 import json
 import math
+import sqlite3
 
 
 # paths = {
@@ -67,3 +68,29 @@ print(paths)
 
 # with open('src/bots/set_path/paths.json') as f:
 #     print(f.read())
+
+
+
+
+def get_info_from_db(num_level):
+    conn = sqlite3.connect('data/levels.sqlite')
+    cursor = conn.cursor()
+
+    # Запрос для получения информации по num_lvl
+    result = cursor.execute('''
+        SELECT paths_bots, bloods, gun, walls FROM info_levels WHERE num_lvl = ?
+    ''', (num_level,)).fetchall()
+
+    conn.close()
+
+    if result:
+        # Десериализация данных из JSON
+        paths_bots = result[0]  # Путь к файлу с данными (например, data/paths_1lvl.json)
+        bloods = json.loads(result[1])  # Десериализация крови
+        gun = json.loads(result[2])  # Десериализация координат оружия
+        walls = json.loads(result[3])  # Десериализация стен
+
+        return paths_bots, bloods, gun, walls
+    else:
+        # print(f'Данные для уровня {num_level} не найдены')
+        return None
