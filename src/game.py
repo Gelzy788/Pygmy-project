@@ -1,9 +1,10 @@
 import pygame
 import random
-from boss_fight_level import (
-    Boss, Player, game_loop, draw_death_menu,
-    WHITE, RED, FPS, WIDTH, BigProjectile, screen
-)
+from settings import WIDTH, WHITE, RED, FPS, screen
+from player import Player
+from boss import Boss
+from projectile import BigProjectile
+from utils import draw_death_menu
 
 
 def scripted_boss_fight():
