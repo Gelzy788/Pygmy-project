@@ -14,6 +14,9 @@ class Player(pygame.sprite.Sprite):
         self.hp = 100
         self.projectiles = pygame.sprite.Group()
         self.shoot_cooldown = 0
+        self.speed_multiplier = 1.0  # Множитель скорости
+        self.base_speed = 5  # Базовая скорость движения
+        self.slow_duration = 0  # Длительность эффекта замедления
 
     def shoot(self, target_x, target_y):
         if self.shoot_cooldown <= 0:
@@ -35,6 +38,15 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
             self.on_ground = True
             self.velocity_y = 0
+
+        # Обработка замедления
+        if self.slow_duration > 0:
+            self.slow_duration -= 1
+            self.speed_multiplier = 0.5
+            if self.slow_duration <= 0:
+                self.speed_multiplier = 1.0
+
+        self.current_speed = self.base_speed * self.speed_multiplier
 
     def jump(self):
         if self.on_ground:

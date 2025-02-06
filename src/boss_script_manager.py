@@ -9,9 +9,13 @@ class BossScriptManager:
         self.current_script = None
 
     def _load_scripts(self):
-        script_path = Path(__file__).parent / "data" / "boss_scripts.json"
-        with open(script_path, 'r') as f:
-            return json.load(f)
+        script_path = Path("data/boss_scripts.json")
+        try:
+            with open(script_path, 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print(f"Error: Could not find {script_path}")
+            return {}
 
     def load_script(self, script_name):
         if script_name in self.scripts:

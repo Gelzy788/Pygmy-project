@@ -20,6 +20,10 @@
         ],
         "attack_sequence": [
             {
+                "time": 60,
+                "attack": "slow_field"
+            },
+            {
                 "time": 180,
                 "attack": "attraction"
             },
@@ -34,6 +38,10 @@
             {
                 "time": 540,
                 "attack": "vertical"
+            },
+            {
+                "time": 600,
+                "attack": "slow_field"
             }
         ],
         "random_attacks": {
@@ -44,7 +52,8 @@
                 "wave",
                 "big",
                 "vertical",
-                "shield"
+                "shield",
+                "slow_field"
             ]
         }
     },
@@ -62,28 +71,37 @@
         "attack_sequence": [
             {
                 "time": 60,
-                "attack": "big"
+                "attack": "slow_field"
             },
             {
                 "time": 120,
-                "attack": "wave"
+                "attack": "big"
             },
             {
                 "time": 180,
-                "attack": "vertical"
+                "attack": "wave"
             },
             {
                 "time": 240,
+                "attack": "vertical"
+            },
+            {
+                "time": 300,
+                "attack": "slow_field"
+            },
+            {
+                "time": 360,
                 "attack": "attraction"
             }
         ],
         "random_attacks": {
-            "start_time": 360,
+            "start_time": 420,
             "interval": 120,
             "attacks": [
                 "big",
                 "wave",
-                "vertical"
+                "vertical",
+                "slow_field"
             ]
         }
     }

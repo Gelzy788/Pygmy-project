@@ -1,6 +1,8 @@
 import pygame
+import math  # Добавляем импорт math
 from settings import WIDTH, HEIGHT
 from projectile import Projectile, BigProjectile
+import random
 
 
 class WaveDamage(pygame.sprite.Sprite):
@@ -69,6 +71,41 @@ class VerticalBeam(pygame.sprite.Sprite):
             self.kill()
 
 
+class SlowField(pygame.sprite.Sprite):
+    def __init__(self, x, y, target_x, target_y, *groups):
+        super().__init__(*groups)
+        self.width = 200
+        self.height = 200  # Возвращаем полную высоту
+        self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+
+        # Рисуем полукруг
+        rect = pygame.Rect(0, 0, self.width, self.height)
+        pygame.draw.arc(self.image, (0, 191, 255, 128), rect,
+                        math.pi, 2 * math.pi, 5)  # Рисуем верхнюю половину круга
+        # Заполняем область под дугой
+        pygame.draw.rect(self.image, (0, 191, 255, 128),
+                         (0, self.height//2, self.width, self.height//2))
+
+        self.rect = self.image.get_rect()
+        # Размещаем поле в указанной позиции
+        self.rect.centerx = x
+        self.rect.bottom = HEIGHT
+        self.lifetime = 5 * 60  # 5 секунд существования поля
+        self.has_slowed = False
+
+    def update(self, player):
+        self.lifetime -= 1
+
+        # Если игрок в поле и ещё не замедлен
+        if self.rect.colliderect(player.rect) and not self.has_slowed:
+            player.slow_duration = 20 * 60  # 20 секунд замедления
+            player.speed_multiplier = 0.5
+            self.has_slowed = True
+
+        if self.lifetime <= 0:
+            self.kill()
+
+
 class Boss(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
@@ -97,6 +134,8 @@ class Boss(pygame.sprite.Sprite):
         self.vertical_beams = pygame.sprite.Group()
         self.vertical_attack_cooldown = 0
         self.vertical_beam = None
+        self.slow_fields = pygame.sprite.Group()
+        self.slow_field_cooldown = 0
 
     def AttractionAttack(self, player):
         if self.attack_cooldown <= 0:
@@ -169,6 +208,13 @@ class Boss(pygame.sprite.Sprite):
             self.vertical_beam = VerticalBeam(target_x, self.vertical_beams)
             self.vertical_attack_cooldown = 360
 
+    def SlowFieldAttack(self, target_x, target_y):
+        if self.slow_field_cooldown <= 0:
+            # Создаем поле рядом с игроком
+            field = SlowField(target_x, HEIGHT, target_x,
+                              target_y, self.slow_fields)
+            self.slow_field_cooldown = 600  # 10 секунд кулдауна
+
     def update(self, player):
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
@@ -176,6 +222,8 @@ class Boss(pygame.sprite.Sprite):
             self.shield_cooldown -= 1
         if self.vertical_attack_cooldown > 0:
             self.vertical_attack_cooldown -= 1
+        if self.slow_field_cooldown > 0:
+            self.slow_field_cooldown -= 1
 
         # Обновляем и проверяем столкновения снарядов
         for projectile in self.projectiles:
@@ -233,5 +281,9 @@ class Boss(pygame.sprite.Sprite):
         # Обновляем вертикальные лучи
         for beam in self.vertical_beams:
             beam.update(player)
+
+        # Обновляем все замедляющие поля
+        for field in self.slow_fields:
+            field.update(player)
 
     # ... все методы босса ...

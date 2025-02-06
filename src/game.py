@@ -77,7 +77,12 @@ def scripted_boss_fight(script_name="default_fight"):
         # Проверяем заскриптованные атаки
         for attack in attack_sequence:
             if frame_counter == attack["time"]:
-                if attack["attack"] == "attraction":
+                if attack["attack"] == "slow_field":
+                    # Создаем поле в случайной точке рядом с игроком
+                    target_x = player.rect.centerx + random.randint(-100, 100)
+                    target_y = player.rect.centery + random.randint(-100, 100)
+                    boss.SlowFieldAttack(target_x, target_y)
+                elif attack["attack"] == "attraction":
                     boss.AttractionAttack(player)
                 elif attack["attack"] == "wave":
                     boss.WaveAttack()
@@ -101,13 +106,17 @@ def scripted_boss_fight(script_name="default_fight"):
                     boss.VerticalBeamAttack(x)
                 elif attack_type == "shield":
                     boss.activate_shield()
+                elif attack_type == "slow_field":
+                    target_x = player.rect.centerx + random.randint(-100, 100)
+                    target_y = player.rect.centery + random.randint(-100, 100)
+                    boss.SlowFieldAttack(target_x, target_y)
 
         frame_counter += 1
 
         old_x = player.rect.x
 
         if keys[pygame.K_a]:
-            player.rect.x -= 5
+            player.rect.x -= player.current_speed
             for sprite in all_sprites:
                 if sprite != player and player.rect.colliderect(sprite.rect):
                     player.rect.x = old_x
@@ -116,7 +125,7 @@ def scripted_boss_fight(script_name="default_fight"):
                 player.rect.x = 0
 
         if keys[pygame.K_d]:
-            player.rect.x += 5
+            player.rect.x += player.current_speed
             for sprite in all_sprites:
                 if sprite != player and player.rect.colliderect(sprite.rect):
                     player.rect.x = old_x
@@ -157,6 +166,9 @@ def scripted_boss_fight(script_name="default_fight"):
         boss.vertical_beams.draw(screen)
         player.projectiles.draw(screen)
         boss.wave_segments.draw(screen)
+
+        # Отрисовка замедляющих полей
+        boss.slow_fields.draw(screen)
 
         hp_text = pygame.font.Font(None, 36).render(
             f'HP: {player.hp}', True, (0, 0, 0))
