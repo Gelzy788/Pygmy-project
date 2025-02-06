@@ -20,6 +20,21 @@ class Player(pygame.sprite.Sprite):
         self.poison_duration = 0  # Длительность эффекта яда
         self.poison_damage_timer = 0  # Таймер для урона от яда
 
+        # Создаем иконки эффектов
+        self.slow_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
+        pygame.draw.circle(self.slow_icon, (0, 191, 255, 200),
+                           (10, 10), 8)  # Голубая иконка
+        pygame.draw.polygon(self.slow_icon, (255, 255, 255, 200),
+                            # Белая стрелка внутри
+                            [(5, 10), (15, 5), (15, 15)])
+
+        self.poison_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
+        pygame.draw.circle(self.poison_icon, (124, 252, 0, 200),
+                           (10, 10), 8)  # Зеленая иконка
+        pygame.draw.polygon(self.poison_icon, (0, 180, 0, 200),
+                            # Темно-зеленый череп
+                            [(10, 4), (16, 16), (4, 16)])
+
     def shoot(self, target_x, target_y):
         if self.shoot_cooldown <= 0:
             projectile = PlayerProjectile(self.rect.centerx, self.rect.centery,
@@ -74,5 +89,26 @@ class Player(pygame.sprite.Sprite):
             old_bottom = self.rect.bottom
             self.rect.height = self.height
             self.rect.bottom = old_bottom
+
+    def draw_effect_icons(self, screen):
+        # Отрисовка иконки замедления
+        if self.slow_duration > 0:
+            screen.blit(self.slow_icon, (10, 40))
+            # Полоска длительности
+            duration_width = (self.slow_duration / (20 * 60)
+                              ) * 20  # 20 секунд максимум
+            pygame.draw.rect(screen, (128, 128, 128), (10, 62, 20, 3))
+            pygame.draw.rect(screen, (0, 191, 255),
+                             (10, 62, duration_width, 3))
+
+        # Отрисовка иконки отравления
+        if self.poison_duration > 0:
+            screen.blit(self.poison_icon, (40, 40))
+            # Полоска длительности
+            duration_width = (self.poison_duration / (25 * 60)
+                              ) * 20  # 25 секунд максимум
+            pygame.draw.rect(screen, (128, 128, 128), (40, 62, 20, 3))
+            pygame.draw.rect(screen, (124, 252, 0),
+                             (40, 62, duration_width, 3))
 
     # ... остальные методы класса Player ...

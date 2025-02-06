@@ -286,9 +286,24 @@ class Boss(pygame.sprite.Sprite):
                     dy = self.rect.centery - player.rect.centery
                     distance = (dx ** 2 + dy ** 2) ** 0.5
                     move_distance = min(50, distance)
+
                     if distance > 0:
-                        player.rect.x += (dx / distance) * move_distance
-                        player.rect.y += (dy / distance) * move_distance
+                        # Перемещаем игрока
+                        new_x = player.rect.x + (dx / distance) * move_distance
+                        new_y = player.rect.y + (dy / distance) * move_distance
+                        player.rect.x = int(new_x)
+                        player.rect.y = int(new_y)
+
+                        # Проверяем столкновение с боссом после перемещения
+                        if player.rect.colliderect(self.rect):
+                            player.hp -= 35  # Дополнительный урон при столкновении
+                            # Откидываем в противоположный конец экрана
+                            if player.rect.centerx < WIDTH // 2:
+                                player.rect.right = WIDTH - 50
+                            else:
+                                player.rect.left = 50
+                            player.rect.bottom = HEIGHT  # Возвращаем на землю
+
                 projectile.kill()
 
         if self.shield_active:
