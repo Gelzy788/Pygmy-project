@@ -352,5 +352,3 @@ class Boss(pygame.sprite.Sprite):
         # Обновляем кислотные лужи
         for pool in self.acid_pools:
             pool.update(player)
-
-    # ... все методы босса ...
