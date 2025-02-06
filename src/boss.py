@@ -106,6 +106,45 @@ class SlowField(pygame.sprite.Sprite):
             self.kill()
 
 
+class AcidPool(pygame.sprite.Sprite):
+    def __init__(self, x, *groups):
+        super().__init__(*groups)
+        self.width = 150
+        self.height = 30
+        self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+
+        # Рисуем лужу кислоты (зеленая полупрозрачная)
+        pygame.draw.ellipse(self.image, (124, 252, 0, 160),
+                            (0, 0, self.width, self.height))
+        # Добавляем более темный оттенок внутри для эффекта глубины
+        pygame.draw.ellipse(self.image, (0, 180, 0, 180),
+                            (self.width//4, self.height//4,
+                             self.width//2, self.height//2))
+
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = HEIGHT
+        self.lifetime = 10 * 60  # 10 секунд существования
+        self.damage_timer = 0
+        self.affected_players = set()  # Игроки, получившие эффект яда
+
+    def update(self, player):
+        self.lifetime -= 1
+        self.damage_timer += 1
+
+        # Урон при нахождении в луже (3 урона каждые 30 кадров = 0.5 секунды)
+        if self.rect.colliderect(player.rect):
+            if self.damage_timer >= 30:
+                player.hp -= 3
+                self.damage_timer = 0
+            if player not in self.affected_players:
+                player.poison_duration = 25 * 60  # 25 секунд
+                self.affected_players.add(player)
+
+        if self.lifetime <= 0:
+            self.kill()
+
+
 class Boss(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
@@ -136,6 +175,8 @@ class Boss(pygame.sprite.Sprite):
         self.vertical_beam = None
         self.slow_fields = pygame.sprite.Group()
         self.slow_field_cooldown = 0
+        self.acid_pools = pygame.sprite.Group()
+        self.acid_attack_cooldown = 0
 
     def AttractionAttack(self, player):
         if self.attack_cooldown <= 0:
@@ -215,6 +256,11 @@ class Boss(pygame.sprite.Sprite):
                               target_y, self.slow_fields)
             self.slow_field_cooldown = 600  # 10 секунд кулдауна
 
+    def AcidPoolAttack(self, target_x):
+        if self.acid_attack_cooldown <= 0:
+            pool = AcidPool(target_x, self.acid_pools)
+            self.acid_attack_cooldown = 480  # 8 секунд кулдауна
+
     def update(self, player):
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
@@ -224,6 +270,8 @@ class Boss(pygame.sprite.Sprite):
             self.vertical_attack_cooldown -= 1
         if self.slow_field_cooldown > 0:
             self.slow_field_cooldown -= 1
+        if self.acid_attack_cooldown > 0:
+            self.acid_attack_cooldown -= 1
 
         # Обновляем и проверяем столкновения снарядов
         for projectile in self.projectiles:
@@ -285,5 +333,9 @@ class Boss(pygame.sprite.Sprite):
         # Обновляем все замедляющие поля
         for field in self.slow_fields:
             field.update(player)
+
+        # Обновляем кислотные лужи
+        for pool in self.acid_pools:
+            pool.update(player)
 
     # ... все методы босса ...

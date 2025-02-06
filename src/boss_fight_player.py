@@ -17,6 +17,8 @@ class Player(pygame.sprite.Sprite):
         self.speed_multiplier = 1.0  # Множитель скорости
         self.base_speed = 5  # Базовая скорость движения
         self.slow_duration = 0  # Длительность эффекта замедления
+        self.poison_duration = 0  # Длительность эффекта яда
+        self.poison_damage_timer = 0  # Таймер для урона от яда
 
     def shoot(self, target_x, target_y):
         if self.shoot_cooldown <= 0:
@@ -47,6 +49,14 @@ class Player(pygame.sprite.Sprite):
                 self.speed_multiplier = 1.0
 
         self.current_speed = self.base_speed * self.speed_multiplier
+
+        # Обработка урона от яда (1 урон в секунду)
+        if self.poison_duration > 0:
+            self.poison_duration -= 1
+            self.poison_damage_timer += 1
+            if self.poison_damage_timer >= 60:  # Каждую секунду
+                self.hp -= 1
+                self.poison_damage_timer = 0
 
     def jump(self):
         if self.on_ground:

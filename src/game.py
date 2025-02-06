@@ -90,6 +90,9 @@ def scripted_boss_fight(script_name="default_fight"):
                     boss.BigProjectileAttack(player)
                 elif attack["attack"] == "vertical":
                     boss.VerticalBeamAttack(mouse_x)
+                elif attack["attack"] == "acid_pool":
+                    target_x = player.rect.centerx
+                    boss.AcidPoolAttack(target_x)
 
         # Случайные атаки после заскриптованной последовательности
         if random_attacks and frame_counter > random_attacks["start_time"]:
@@ -110,6 +113,9 @@ def scripted_boss_fight(script_name="default_fight"):
                     target_x = player.rect.centerx + random.randint(-100, 100)
                     target_y = player.rect.centery + random.randint(-100, 100)
                     boss.SlowFieldAttack(target_x, target_y)
+                elif attack_type == "acid_pool":
+                    target_x = player.rect.centerx
+                    boss.AcidPoolAttack(target_x)
 
         frame_counter += 1
 
@@ -169,6 +175,9 @@ def scripted_boss_fight(script_name="default_fight"):
 
         # Отрисовка замедляющих полей
         boss.slow_fields.draw(screen)
+
+        # Отрисовка луж
+        boss.acid_pools.draw(screen)
 
         hp_text = pygame.font.Font(None, 36).render(
             f'HP: {player.hp}', True, (0, 0, 0))
