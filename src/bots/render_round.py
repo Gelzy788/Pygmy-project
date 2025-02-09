@@ -89,13 +89,10 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
-            elif event.type == pg.KEYDOWN:
+            elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
                 player.update(event)
         
-        # player.move()
-
-        # pressed = pg.key.get_pressed()
-        # player.update(pressed)
+        player.move()
 
         screen.fill((0, 0, 0))
 

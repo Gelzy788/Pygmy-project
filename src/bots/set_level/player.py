@@ -21,7 +21,7 @@ def load_image(name, colorkey=None, scale=1):
 
 
 class Player(pygame.sprite.Sprite):
-    image_bot = load_image("player1.png", scale=0.5)
+    image_bot = load_image("player1.png", scale=0.3)
 
     def __init__(self, group, x, y):
         super().__init__(group)
@@ -31,40 +31,65 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = y
         self.add(group)
 
-        self.screen_width = 800
-        self.screen_height = 800
-        self.base_speed = 6
-        self.sprint_speed = 12
+# Параметры движения
+        self.moving_left = False
+        self.moving_right = False
+        self.moving_up = False
+        self.moving_down = False
+        self.is_sprinting = False
+        
+        self.base_speed = 6      # Постоянная скорость ходьбы
+        self.sprint_speed = 10    # Скорость при спринте
         self.current_speed = self.base_speed
 
     def update(self, event):
-        move_x = 0
-        move_y = 0
-
+        # Обработка нажатий клавиш
         if event.type == pygame.KEYDOWN:
-            if event.key in [pygame.K_LEFT, pygame.K_a]:
-                move_x = -self.current_speed
-            elif event.key in [pygame.K_RIGHT, pygame.K_d]:
-                move_x = self.current_speed
-            elif event.key in [pygame.K_UP, pygame.K_w]:
-                move_y = -self.current_speed
-            elif event.key in [pygame.K_DOWN, pygame.K_s]:
-                move_y = self.current_speed
-
-            if event.key in [pygame.K_LSHIFT, pygame.K_RSHIFT]:
+            if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                self.moving_left = True
+            if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                self.moving_right = True
+            if event.key == pygame.K_w or event.key == pygame.K_UP:
+                self.moving_up = True
+            if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                self.moving_down = True
+            if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                self.is_sprinting = True
                 self.current_speed = self.sprint_speed
 
+        # Обработка отпускания клавиш
         elif event.type == pygame.KEYUP:
-            if event.key in [pygame.K_LSHIFT, pygame.K_RSHIFT]:
+            if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                self.moving_left = False
+            if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                self.moving_right = False
+            if event.key == pygame.K_w or event.key == pygame.K_UP:
+                self.moving_up = False
+            if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                self.moving_down = False
+            if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+                self.is_sprinting = False
                 self.current_speed = self.base_speed
 
-        self.move(move_x, move_y)
+    def move(self):
+        # Вычисляем направление движения
+        dx = 0
+        dy = 0
+        
+        if self.moving_left:
+            dx -= 1
+        if self.moving_right:
+            dx += 1
+        if self.moving_up:
+            dy -= 1
+        if self.moving_down:
+            dy += 1
 
-    def move(self, move_x, move_y):
-        new_x = self.rect.x + move_x
-        new_y = self.rect.y + move_y
+        # Нормализация диагонального движения
+        if dx != 0 and dy != 0:
+            dx *= 0.7071
+            dy *= 0.7071
 
-        if 0 <= new_x <= self.screen_width - self.rect.width:
-            self.rect.x = new_x
-        if 0 <= new_y <= self.screen_height - self.rect.height:
-            self.rect.y = new_y
+        # Применяем текущую скорость
+        self.rect.x += dx * self.current_speed
+        self.rect.y += dy * self.current_speed
