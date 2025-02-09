@@ -13,7 +13,7 @@ def get_info_from_db(num_level):
 
     # Запрос для получения информации по num_lvl
     result = cursor.execute('''
-        SELECT paths_bots, bloods, gun, walls FROM info_levels WHERE num_lvl = ?
+        SELECT paths_bots, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     ''', (num_level,)).fetchone()
 
     conn.close()

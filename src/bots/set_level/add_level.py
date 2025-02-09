@@ -55,7 +55,7 @@ def writing_path_to_json(paths, num_level):
         json.dump(updated_paths, f, indent=2)
 
 
-def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_gun):
+def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player):
     # Преобразование путей
     for i, path in enumerate(temp_paths):
         paths[f'bot_{i}'] = {'path': path, 'speed': 1}
@@ -64,16 +64,16 @@ def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_gun):
     # Подготовка данных для вставки
     json_paths = f'data/paths_{num_level}lvl.json'
     json_bloods = json.dumps(bloods)
-    json_gun = json.dumps(cord_gun if cord_gun else [])
+    json_player = json.dumps(cord_player if cord_player else [])
     json_walls = json.dumps(walls)
 
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT OR REPLACE INTO info_levels (num_lvl, paths_bots, bloods, gun, walls)
+        INSERT OR REPLACE INTO info_levels (num_lvl, paths_bots, bloods, player, walls)
         VALUES (?, ?, ?, ?, ?)
-    ''', (num_level, json_paths, json_bloods, json_gun, json_walls))
+    ''', (num_level, json_paths, json_bloods, json_player, json_walls))
 
 
     conn.commit()
@@ -88,19 +88,19 @@ def add_level():
     pygame.display.set_caption('Создание нового уровня')
 
     num_level = int(input('Введите номер уровня: '))
-    gun = int(input('Будет ли оружие на этом уровне? (1 = да/0 = нет): '))
+    player = int(input('Будет ли игрок на этом уровне? (1 = да/0 = нет): '))
     
     temp_paths = []
     bloods = []
     walls = []
-    cord_gun = ()
+    cord_player = ()
     paths = {}
 
     fps = 60
     clock = pygame.time.Clock()
     drawing = False  # режим рисования выключен
     set_wall = False #  ----------------------------------------<<<<<< 
-    have_gun = False
+    have_player = False
     set_blood = False
     first_point = False
     change = False
@@ -109,7 +109,7 @@ def add_level():
     print('---------------------------------|')
     print('Для расстановки стен нажминте "w"|')
     print('Для размещения крови нажмите "b" |')
-    if have_gun:
+    if have_player:
         print('Для размещения оружия нажмите "g"|')
     print('---------------------------------|')
     new_surface = pygame.Surface(screen.get_size())
@@ -119,7 +119,7 @@ def add_level():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_gun)
+                add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if set_wall:
                     print('жми, то да се')
@@ -136,14 +136,14 @@ def add_level():
                         walls.append(((x1, y1), event.pos))
                         x1, y1 = 0, 0
                         change = False
-                elif gun and have_gun and not cord_gun:
+                elif player and have_player and not cord_player:
                     print('[======================================================]')
-                    print('[Задайте место расположения оружия нажитием кнопки мыши]')
+                    print('[Задайте место расположения иргока нажитием кнопки мыши]')
                     print('[======================================================]')
                     #      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^изменить место вывода текста
                     pygame.draw.circle(screen, (0, 255, 0), (event.pos), 10, 0)
-                    cord_gun = event.pos
-                    print(cord_gun, '=======-=-==-=-=-=-=-=-=-=-=')
+                    cord_player = event.pos
+                    print(cord_player, '=======-=-==-=-=-=-=-=-=-=-=')
                     change = False
                 elif set_blood:
                     pygame.draw.circle(screen, (255, 0, 0), (event.pos), 5, 0)
@@ -156,7 +156,7 @@ def add_level():
                         pygame.draw.circle(screen, (255, 255, 255), (event.pos), 5, 0)
                     temp_paths.append([event.pos])
                     drawing = True  # включаем режим рисования
-            if event.type == pygame.MOUSEMOTION and drawing and not set_blood and not (have_gun and not cord_gun):
+            if event.type == pygame.MOUSEMOTION and drawing and not set_blood and not (have_player and not cord_player):
                 screen_width, screen_height = screen.get_size()
                 x, y = event.pos
                 if 0 <= x < screen_width and 0 <= y < screen_height:
@@ -170,9 +170,9 @@ def add_level():
                 change = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_g:
-                    if gun:
-                        have_gun = not have_gun
-                        if have_gun:
+                    if player:
+                        have_player = not have_player
+                        if have_player:
                             set_blood = False
                             set_wall = False
                             print('Включен режим размещения оружия')
@@ -184,7 +184,7 @@ def add_level():
                     set_wall = not set_wall
                     if set_wall:
                         set_blood = False
-                        have_gun = False
+                        have_player = False
                         print('Для размещения стены укажите 2 точки нажатием клавишы мыши')
                         # для выкл w
                     else:
@@ -197,7 +197,7 @@ def add_level():
                     set_blood = not set_blood
                     if set_blood:
                         set_wall = False
-                        have_gun = False
+                        have_player = False
                         print('--------------------------------------------------|')
                         print('Включен режим размещения крови                    |')
                         print('Нажимайте на те места где хотите разместить кровь |')

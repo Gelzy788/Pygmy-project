@@ -9,7 +9,7 @@ from ray_cast.particle import Particle
 from ray_cast.ray import Ray
 from bot import Bot
 from set_level.blood import Blood
-from set_level.gun import Gun
+from set_level.player import Player
 
 
 def setup():
@@ -33,17 +33,17 @@ def get_info_from_db(num_level):
 
     # Запрос для получения информации по num_lvl
     result = cursor.execute('''
-        SELECT paths_bots, bloods, gun, walls FROM info_levels WHERE num_lvl = ?
+        SELECT paths_bots, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     ''', (num_level,)).fetchone()
 
     conn.close()
 
     if result:
-        bloods = json.loads(result[1])  # Десериализация крови
-        gun = json.loads(result[2])  # Десериализация координат оружия
-        walls = json.loads(result[3])  # Десериализация стен
+        bloods = json.loads(result[1])
+        player = json.loads(result[2])
+        walls = json.loads(result[3])
 
-        return bloods, gun, walls
+        return bloods, player, walls
     else:
         # print(f'Данные для уровня {num_level} не найдены')
         return None
@@ -55,9 +55,15 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     running = True
     pg.event.set_allowed([pg.QUIT, pg.KEYDOWN, pg.KEYUP])
 
+    # Создание спрайтов для игрока
+    player_sprites = pg.sprite.Group()
+
     info = get_info_from_db(num_level)
     if info:
-        bloods, cord_gun, walls = info
+        bloods, cord_player, walls = info
+        player = Player(player_sprites, cord_player[0], cord_player[1])
+        player.screen_width = screen_w
+        player.screen_height = screen_h
     else:
         print(f'Данные для уровня {num_level} не найдены')
         return
@@ -77,17 +83,19 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     for x, y in bloods:
         Blood(blood_sprites, x, y)
 
-    # Создание спрайтов для оружия
-    gun_sprites = pg.sprite.Group()
-    Gun(gun_sprites, cord_gun[0], cord_gun[1])
 
     k = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
-            # if ... обновление игрока
-            # здесь обрабатывать движения игрока??? <---------------------------------<<<
+            elif event.type == pg.KEYDOWN:
+                player.update(event)
+        
+        # player.move()
+
+        # pressed = pg.key.get_pressed()
+        # player.update(pressed)
 
         screen.fill((0, 0, 0))
 
@@ -99,8 +107,8 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
             b.update(screen)
 
         blood_sprites.draw(screen)
-        gun_sprites.draw(screen)
         bot_sprites.draw(screen)
+        player_sprites.draw(screen)
 
         k += 1
         # print(k)
