@@ -1,5 +1,5 @@
 import pygame
-import math  # Добавляем импорт math
+import math
 from settings import WIDTH, HEIGHT
 from projectile import Projectile, BigProjectile
 import random
