@@ -110,7 +110,7 @@ def add_level():
     print('Для расстановки стен нажминте "w"|')
     print('Для размещения крови нажмите "b" |')
     if have_player:
-        print('Для размещения оружия нажмите "g"|')
+        print('Для размещения игрока нажмите "g"|')
     print('---------------------------------|')
     new_surface = pygame.Surface(screen.get_size())
     new_surface.fill((0, 0, 0))
