@@ -6,7 +6,6 @@ from ray_cast.ray import Ray
 from bot import Bot
 import sqlite3
 import json
-import sys
 
 
 def get_info_from_db(num_level):
@@ -52,7 +51,7 @@ def start_round():
     for i in range(len(templates)):
         bots[f'bot_{i}'] = Bot(
             bot_sprites, i, templates[f'bot_{i}']['path'],
-            Particle(speed=5), 0, 1)
+            Particle(speed=1), 0, 1)
 
     rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3])
                   for i in range(set_up[3])] for key, bot in bots.items()}

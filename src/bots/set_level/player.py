@@ -21,7 +21,7 @@ def load_image(name, colorkey=None, scale=1):
 
 
 class Player(pygame.sprite.Sprite):
-    image_bot = load_image("player1.png", scale=0.3)
+    image_bot = load_image("player1.png", scale=0.1)
 
     def __init__(self, group, x, y):
         super().__init__(group)
@@ -32,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.speed = 1
         self.add(group)
 
-# Параметры движения
+        # Параметры движения
         self.moving_left = False
         self.moving_right = False
         self.moving_up = False

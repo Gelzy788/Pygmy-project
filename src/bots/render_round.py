@@ -1,5 +1,4 @@
 import pygame as pg
-import math
 import json
 import sqlite3
 from random import randint
@@ -102,8 +101,12 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         screen.fill((0, 0, 0))
 
         for key, bot in bots.items():
-            bot.update(screen, viewing_angle, rays[key], boundaries)
-
+            singal = bot.update(
+                screen, viewing_angle, rays[key], boundaries, (player.rect.x, player.rect.y))
+            # отлавливаем сигнал о том что бот заметил игрока
+            if singal:
+                print('-' * 10, 'БОТ ВАС ЗАМЕТИЛ', '-' * 10)
+                # pass
         # Обновляем границы
         for b in boundaries:
             b.update(screen)
