@@ -7,13 +7,14 @@ from bot import Bot
 import sqlite3
 import json
 
+
 def get_info_from_db(num_level):
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
 
     # Запрос для получения информации по num_lvl
     result = cursor.execute('''
-        SELECT paths_bots, bloods, player, walls FROM info_levels WHERE num_lvl = ?
+        SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     ''', (num_level,)).fetchone()
 
     conn.close()
@@ -36,19 +37,21 @@ def start_round():
 
     bot_sprites = pg.sprite.Group()
     bots: dict[str, Bot] = {}
-    
+
     with open(paths_bots) as f:
         templates: dict = json.load(f)
 
     for i in range(len(templates)):
         bots[f'bot_{i}'] = Bot(
-            bot_sprites, i, templates[f'bot_{i}']['path'], 
+            bot_sprites, i, templates[f'bot_{i}']['path'],
             Particle(speed=1), 0, 1)
-    
-    rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, bot in bots.items()}
+
+    rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3])
+                  for i in range(set_up[3])] for key, bot in bots.items()}
     boundaries = []
 
     render_round(set_up, bots, rays, boundaries, bot_sprites, num_level)
+
 
 if __name__ == "__main__":
     start_round()

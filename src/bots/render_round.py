@@ -12,19 +12,20 @@ from set_level.player import Player
 
 
 def setup():
-    ### CONFIG
+    # CONFIG
     screen_w = 800
     screen_h = 800
     border_on = True
     num_walls = 3
     num_rays = 45
     viewing_angle = 135
-    ### END CONFIG
+    # END CONFIG
 
     pg.init()
     screen = pg.display.set_mode((screen_w, screen_h))
 
     return screen, border_on, num_walls, num_rays, screen_w, screen_h, viewing_angle
+
 
 def get_info_from_db(num_level):
     conn = sqlite3.connect('data/levels.sqlite')
@@ -32,7 +33,7 @@ def get_info_from_db(num_level):
 
     # Запрос для получения информации по num_lvl
     result = cursor.execute('''
-        SELECT paths_bots, bloods, player, walls FROM info_levels WHERE num_lvl = ?
+        SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     ''', (num_level,)).fetchone()
 
     conn.close()
@@ -46,6 +47,7 @@ def get_info_from_db(num_level):
     else:
         # print(f'Данные для уровня {num_level} не найдены')
         return None
+
 
 def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], boundaries: list[Boundary], bot_sprites: pg.sprite.Group, num_level):
     screen, border_on, num_walls, num_rays, screen_w, screen_h, viewing_angle = setup
@@ -69,19 +71,22 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
 
     # Если границы включены, добавляем их
     if border_on:
-        boundaries.append(Boundary(screen, (0, 0), (screen_w, 0), pg.Color('black')))
-        boundaries.append(Boundary(screen, (screen_w, 0), (screen_w, screen_h)))
-        boundaries.append(Boundary(screen, (screen_w, screen_h), (0, screen_h)))
-        boundaries.append(Boundary(screen, (0, screen_h), (0, 0), pg.Color('black')))
-    
+        boundaries.append(
+            Boundary(screen, (0, 0), (screen_w, 0), pg.Color('black')))
+        boundaries.append(
+            Boundary(screen, (screen_w, 0), (screen_w, screen_h)))
+        boundaries.append(
+            Boundary(screen, (screen_w, screen_h), (0, screen_h)))
+        boundaries.append(Boundary(screen, (0, screen_h),
+                          (0, 0), pg.Color('black')))
+
     for (x1, y1), (x2, y2) in walls:
         boundaries.append(Boundary(screen, (x1, y1), (x2, y2)))
-    
+
     # Создание спрайтов для крови
     blood_sprites = pg.sprite.Group()
     for x, y in bloods:
         Blood(blood_sprites, x, y)
-
 
     k = 0
     while running:
@@ -90,13 +95,14 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
                 running = False
             elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
                 player.update(event)
-        
+
         player.move()
 
         screen.fill((0, 0, 0))
 
         for key, bot in bots.items():
-            singal = bot.update(screen, viewing_angle, rays[key], boundaries, (player.rect.x, player.rect.y))
+            singal = bot.update(
+                screen, viewing_angle, rays[key], boundaries, (player.rect.x, player.rect.y))
             # отлавливаем сигнал о том что бот заметил игрока
             if singal:
                 print('-' * 10, 'БОТ ВАС ЗАМЕТИЛ', '-' * 10)
@@ -114,7 +120,8 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         pg.display.flip()
         clock.tick(360)
         pg.display.update()
-        pg.time.wait(25) # надо убирать, пока что оставил, т.к. у меня из-за этого боты не дергаются
+        # надо убирать, пока что оставил, т.к. у меня из-за этого боты не дергаются
+        pg.time.wait(25)
 
 
 if __name__ == "__main__":
@@ -123,7 +130,8 @@ if __name__ == "__main__":
 
     # Создание объектов (частицы, лучи, границы)
     particles = [Particle(), Particle()]  # Добавляем несколько частиц
-    rays = [Ray(particles[0], i * -135 / 45 - 45) for i in range(45)]  # Создаем лучи для каждой частицы
+    rays = [Ray(particles[0], i * -135 / 45 - 45)
+            for i in range(45)]  # Создаем лучи для каждой частицы
     boundaries = []
 
     # Координаты, на которые нужно переместить объекты
