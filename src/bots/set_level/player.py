@@ -29,6 +29,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.speed = 1
         self.add(group)
 
 # Параметры движения
@@ -37,7 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.moving_up = False
         self.moving_down = False
         self.is_sprinting = False
-        
+
         self.base_speed = 6      # Постоянная скорость ходьбы
         self.sprint_speed = 10    # Скорость при спринте
         self.current_speed = self.base_speed
@@ -75,15 +76,15 @@ class Player(pygame.sprite.Sprite):
         # Вычисляем направление движения
         dx = 0
         dy = 0
-        
+
         if self.moving_left:
-            dx -= 1
+            dx -= self.speed
         if self.moving_right:
-            dx += 1
+            dx += self.speed
         if self.moving_up:
-            dy -= 1
+            dy -= self.speed
         if self.moving_down:
-            dy += 1
+            dy += self.speed
 
         # Нормализация диагонального движения
         if dx != 0 and dy != 0:

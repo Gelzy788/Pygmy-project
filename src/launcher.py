@@ -1,7 +1,9 @@
 import pygame
 import sys
+import subprocess
+import os
 from boss_fight.game import scripted_boss_fight
-from boss_fight.database import Database
+from database import Database
 
 # Инициализация Pygame
 pygame.init()
@@ -37,6 +39,23 @@ def draw_input_box(screen, text, input_rect):
     pygame.draw.rect(screen, BLACK, input_rect, 2)
     text_surface = save_font.render(text, True, BLACK)
     screen.blit(text_surface, (input_rect.x + 5, input_rect.y + 5))
+
+
+def start_level(user_id, level):
+    if level == 5:  # Предположим, что 5 уровень - это босс файт
+        return scripted_boss_fight("aggressive_fight")
+    else:
+        # Получаем путь к start_round.py относительно launcher.py
+        start_round_path = os.path.join(
+            os.path.dirname(__file__), 'bots', 'start_round.py')
+
+        # Запускаем уровень через start_round.py
+        try:
+            subprocess.run(
+                [sys.executable, start_round_path, str(level)], check=True)
+            return "continue"
+        except subprocess.CalledProcessError:
+            return "quit"
 
 
 def saves_menu():
@@ -78,18 +97,14 @@ def saves_menu():
                                 input_active = True
                                 current_save_slot = slot_number
                             else:
-                                # Проверяем клик по кнопке удаления
-                                delete_rect = pygame.Rect(
-                                    slot.right - 30, slot.y + 15, 20, 20)
-                                if delete_rect.collidepoint(mx, my):
-                                    # Удаляем по реальному id
-                                    db.delete_save(saves_dict[slot_number][0])
-                                else:
-                                    # Запускаем игру с выбранным сохранением
-                                    result = scripted_boss_fight(
-                                        "aggressive_fight")
-                                    if result == "quit":
-                                        return
+                                # Получаем текущий уровень пользователя
+                                user_id = saves_dict[slot_number][0]
+                                current_level = db.get_current_level(user_id)
+
+                                # Запускаем соответствующий уровень
+                                result = start_level(user_id, current_level)
+                                if result == "quit":
+                                    return
 
             if event.type == pygame.KEYDOWN:
                 if input_active:
@@ -114,7 +129,7 @@ def saves_menu():
             if slot_number in saves_dict:
                 # Отрисовка информации о сохранении
                 save_id, nickname = saves_dict[slot_number]
-                draw_text(f"ID: {save_id} - {nickname}", save_font, BLACK,
+                draw_text(nickname, save_font, BLACK,
                           screen, slot.centerx, slot.centery)
 
                 # Кнопка удаления

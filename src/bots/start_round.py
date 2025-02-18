@@ -6,6 +6,8 @@ from ray_cast.ray import Ray
 from bot import Bot
 import sqlite3
 import json
+import sys
+
 
 def get_info_from_db(num_level):
     conn = sqlite3.connect('data/levels.sqlite')
@@ -13,7 +15,7 @@ def get_info_from_db(num_level):
 
     # Запрос для получения информации по num_lvl
     result = cursor.execute('''
-        SELECT paths_bots, bloods, player, walls FROM info_levels WHERE num_lvl = ?
+        SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     ''', (num_level,)).fetchone()
 
     conn.close()
@@ -25,9 +27,16 @@ def get_info_from_db(num_level):
 
 
 def start_round():
+    if len(sys.argv) > 1:
+        num_level = int(sys.argv[1])
+        # Здесь код запуска уровня с номером num_level
+        print(f"Запуск уровня {num_level}")
+    else:
+        print("Не указан номер уровня")
+        sys.exit(1)
+
     pg.init()
     set_up = setup()
-    num_level = int(input('Введите номер уровня: '))
     paths_bots = get_info_from_db(num_level)
     print(paths_bots)
     if not paths_bots:
@@ -36,19 +45,21 @@ def start_round():
 
     bot_sprites = pg.sprite.Group()
     bots: dict[str, Bot] = {}
-    
+
     with open(paths_bots) as f:
         templates: dict = json.load(f)
 
     for i in range(len(templates)):
         bots[f'bot_{i}'] = Bot(
-            bot_sprites, i, templates[f'bot_{i}']['path'], 
+            bot_sprites, i, templates[f'bot_{i}']['path'],
             Particle(speed=5), 0, 1)
-    
-    rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3]) for i in range(set_up[3])] for key, bot in bots.items()}
+
+    rays = {key: [Ray(bot.particle, i * -set_up[6] / set_up[3])
+                  for i in range(set_up[3])] for key, bot in bots.items()}
     boundaries = []
 
     render_round(set_up, bots, rays, boundaries, bot_sprites, num_level)
+
 
 if __name__ == "__main__":
     start_round()

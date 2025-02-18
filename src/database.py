@@ -5,8 +5,8 @@ import os
 class Database:
     def __init__(self):
         # Путь к папке data относительно корня проекта
-        data_path = os.path.join(os.path.dirname(os.path.dirname(
-            os.path.dirname(__file__))), 'data')
+        data_path = os.path.join(os.path.dirname(
+            os.path.dirname(__file__)), 'data')
 
         # Путь к файлу базы данных
         self.db_path = os.path.join(data_path, 'levels.sqlite')
@@ -33,6 +33,12 @@ class Database:
     def delete_save(self, save_id):
         self.cursor.execute('DELETE FROM user WHERE id = ?', (save_id,))
         self.conn.commit()
+
+    def get_current_level(self, user_id):
+        self.cursor.execute(
+            'SELECT current_level FROM user WHERE id = ?', (user_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else 1
 
     def close(self):
         self.conn.close()
