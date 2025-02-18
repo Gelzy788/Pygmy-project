@@ -1,5 +1,5 @@
 import pygame
-from settings import WIDTH, HEIGHT, WHITE
+from boss_fight.settings import WIDTH, HEIGHT, WHITE
 
 
 def draw_death_menu(screen):

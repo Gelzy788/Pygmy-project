@@ -1,5 +1,5 @@
 import pygame
-from settings import WIDTH, HEIGHT
+from boss_fight.settings import WIDTH, HEIGHT
 
 
 class Projectile(pygame.sprite.Sprite):

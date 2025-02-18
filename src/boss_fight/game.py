@@ -1,11 +1,11 @@
 import pygame
 import random
-from settings import WIDTH, WHITE, RED, FPS, screen
-from boss_fight_player import Player
-from boss import Boss
-from projectile import BigProjectile
-from utils import draw_death_menu
-from boss_script_manager import BossScriptManager
+from boss_fight.settings import WIDTH, WHITE, RED, FPS, screen
+from boss_fight.boss_fight_player import Player
+from boss_fight.boss import Boss
+from boss_fight.projectile import BigProjectile
+from boss_fight.utils import draw_death_menu
+from boss_fight.boss_script_manager import BossScriptManager
 
 
 def scripted_boss_fight(script_name="default_fight"):

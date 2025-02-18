@@ -1,10 +1,10 @@
 import pygame
 import sys
-from settings import WIDTH, HEIGHT, WHITE, RED, FPS, screen
-from boss_fight_player import Player
-from boss import Boss
-from utils import draw_death_menu
-from projectile import BigProjectile
+from boss_fight.settings import WIDTH, HEIGHT, WHITE, RED, FPS, screen
+from boss_fight.boss_fight_player import Player
+from boss_fight.boss import Boss
+from boss_fight.utils import draw_death_menu
+from boss_fight.projectile import BigProjectile
 
 
 def test_game():

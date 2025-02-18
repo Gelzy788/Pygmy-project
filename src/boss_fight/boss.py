@@ -1,7 +1,7 @@
 import pygame
 import math
-from settings import WIDTH, HEIGHT
-from projectile import Projectile, BigProjectile
+from boss_fight.settings import WIDTH, HEIGHT
+from boss_fight.projectile import Projectile, BigProjectile
 import random
 
 

@@ -1,6 +1,6 @@
 import pygame
-from settings import WIDTH, HEIGHT, GRAVITY, JUMP_STRENGTH
-from projectile import PlayerProjectile
+from boss_fight.settings import WIDTH, HEIGHT, GRAVITY, JUMP_STRENGTH
+from boss_fight.projectile import PlayerProjectile
 
 
 class Player(pygame.sprite.Sprite):
