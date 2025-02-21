@@ -63,8 +63,8 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     if info:
         bloods, cord_player, walls = info
         player = Player(player_sprites, cord_player[0], cord_player[1])
-        player.screen_width = screen_w
-        player.screen_height = screen_h
+        player.screen_width = screen_w   #
+        player.screen_height = screen_h  #
     else:
         print(f'Данные для уровня {num_level} не найдены')
         return
@@ -95,8 +95,9 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
                 running = False
             elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
                 player.update(event)
-
-        player.move()
+        
+        player.move(boundaries)
+        player.collect_blood(blood_sprites, bloods)
 
         screen.fill((0, 0, 0))
 
@@ -110,6 +111,9 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         # Обновляем границы
         for b in boundaries:
             b.update(screen)
+
+        # Рисуем очки крови
+        player.draw_blood_points(screen)
 
         blood_sprites.draw(screen)
         bot_sprites.draw(screen)

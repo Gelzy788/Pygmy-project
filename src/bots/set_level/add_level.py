@@ -3,13 +3,6 @@ import json
 import math
 import sqlite3
 
-# !
-# !
-# !
-# проблема с ctrl + z
-# настроить отмену записи раунда
-
-
 
 def smooth_path(path):
     n = 50 # задержка
@@ -69,9 +62,9 @@ def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player):
 
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
-
+    # SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
     cursor.execute('''
-        INSERT OR REPLACE INTO info_levels (num_lvl, paths_bots, bloods, player, walls)
+        INSERT OR REPLACE INTO info_levels (num_lvl, script_paths, bloods, player, walls)
         VALUES (?, ?, ?, ?, ?)
     ''', (num_level, json_paths, json_bloods, json_player, json_walls))
 

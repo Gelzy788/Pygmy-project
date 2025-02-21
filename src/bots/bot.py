@@ -8,7 +8,6 @@ from ray_cast.ray import Ray
 
 def load_image(name, colorkey=None, scale=1):
     fullname = os.path.join('data', name)
-    # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
@@ -24,25 +23,34 @@ def load_image(name, colorkey=None, scale=1):
     return image
 
 
+def rotate_image(image, angle):
+    # Функция для поворота изображения
+    return pygame.transform.rotate(image, angle)
+
+
 class Bot(pygame.sprite.Sprite):
-    image_bot = load_image("bot.png", scale=0.5)
+    image_bot_stay = load_image("bot/bot_stay.png", scale=0.7)
+    images_bots = [load_image(f'bot/bot_{i}.png', scale=0.7) for i in range(1, 18)]
 
     def __init__(self, group, bot_id, path: list, particle: Particle, indices, direction, speed=1):
         super().__init__(group)
-        self.image = Bot.image_bot
+        self.image = Bot.image_bot_stay
+        self.original_image = self.image
         self.rect = self.image.get_rect()
+        self.index_current_image = 0
         self.bot_id = bot_id
         self.path = path
         self.particle = particle
         self.indices = indices
         self.direction = direction
         self.speed = speed
+        self.frame_counter = 0
         self.add(group)
     
     def update(self, screen, viewing_angle, ray: list[Ray], boundaries, cord_player):
         index = self.indices
-        speed = self.particle.speed #self.speed
-        direction = self.direction # везде проставить self
+        speed = self.particle.speed
+        direction = self.direction
         
         index += direction * speed
 
@@ -88,9 +96,42 @@ class Bot(pygame.sprite.Sprite):
         # Обновляем позицию частицы
         self.particle.update(screen, x, y)
 
-            # Добавляем обновление позиции спрайта
+        # Добавляем обновление позиции спрайта
         self.rect.centerx = int(x)  # используем centerx для центрирования спрайта
         self.rect.centery = int(y)  # используем centery для центрирования спрайта
+
+
+        # Проверяем, изменилось ли положение
+        if self.path[int(index)] == self.path[int(self.indices)]:
+            self.image = Bot.image_bot_stay  # Если стоит, то обычное изображение
+            # Поворачиваем изображение
+            self.image = rotate_image(self.image, self.particle.current_angle + 67.5)
+            self.index_current_image = 0
+        else:
+            # Чередуем анимацию
+            self.frame_counter += 1
+            if self.frame_counter % 5 == 0:  # Каждые 10 кадров смена изображения
+                self.original_image = Bot.images_bots[self.index_current_image]
+                self.index_current_image += 1
+                self.index_current_image %= 17
+                # if self.direction == 1:
+                #     self.original_image = (
+                #         Bot.image_bot_run_r if self.original_image != Bot.image_bot_run_r else Bot.image_bot_run_l
+                #     )
+                # else:
+                #     self.original_image = (
+                #         Bot.image_bot_run_l if self.original_image != Bot.image_bot_run_l else Bot.image_bot_run_r
+                #     )
+                # self.index_current_image
+                # Bot.images_bots
+
+            # Поворачиваем изображение
+            self.image = rotate_image(self.original_image, self.particle.current_angle + 67.5)
+        # Обновляем rect для изображения
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+        self.indices = index
+        # print(self.particle.current_angle, delta_angle) # -67,5 смотрит вправо
 
         '''
         # Проверяем, находится ли игрок в поле зрения и в пределах видимости
@@ -102,8 +143,6 @@ class Bot(pygame.sprite.Sprite):
         signal_temp = []
         for r in ray:
             signal_temp.append(r.update(screen, self.particle, boundaries, cord_player, self.particle.current_angle))
-        # Обновляем индекс для следующего шага
-        self.indices = index
 
         if any(signal_temp):
             return True
