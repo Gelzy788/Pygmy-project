@@ -114,16 +114,6 @@ class Bot(pygame.sprite.Sprite):
                 self.original_image = Bot.images_bots[self.index_current_image]
                 self.index_current_image += 1
                 self.index_current_image %= 17
-                # if self.direction == 1:
-                #     self.original_image = (
-                #         Bot.image_bot_run_r if self.original_image != Bot.image_bot_run_r else Bot.image_bot_run_l
-                #     )
-                # else:
-                #     self.original_image = (
-                #         Bot.image_bot_run_l if self.original_image != Bot.image_bot_run_l else Bot.image_bot_run_r
-                #     )
-                # self.index_current_image
-                # Bot.images_bots
 
             # Поворачиваем изображение
             self.image = rotate_image(self.original_image, self.particle.current_angle + 67.5)

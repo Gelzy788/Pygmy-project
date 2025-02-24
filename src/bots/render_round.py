@@ -91,9 +91,11 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     k = 0
     while running:
         for event in pg.event.get():
+            keys = pg.key.get_pressed()
             if event.type == pg.QUIT:
                 running = False
-            elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
+            elif event.type == pg.KEYDOWN or event.type == pg.KEYUP or keys[pg.K_UP] or keys[pg.K_DOWN] or keys[pg.K_LEFT]\
+                  or keys[pg.K_RIGHT] or keys[pg.K_w] or keys[pg.K_a] or keys[pg.K_s] or keys[pg.K_d]:  # проблема в том что я проверяю только нажатие или отпускаие клавишы, а задержку нет
                 player.update(event)
         
         player.move(boundaries)

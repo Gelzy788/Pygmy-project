@@ -21,18 +21,29 @@ def load_image(name, colorkey=None, scale=1):
     return image
 
 
+def rotate_image(image, angle):
+    # Функция для поворота изображения
+    return pygame.transform.rotate(image, angle)
+
+
 class Player(pygame.sprite.Sprite):
-    image_bot = load_image("player1.png", scale=0.2)
+    images_player_front = [load_image(f'player/player_{i}.png', scale=1) for i in range(1, 5)]
+    image_player_back_left = load_image(f'player/player_back_left.png', scale=1)
+    image_player_back_right = load_image(f'player/player_back_right.png', scale=1)
+    image_player_back_up = load_image(f'player/player_back_up.png', scale=1)
 
     def __init__(self, group, x, y):
         super().__init__(group)
-        self.image = Player.image_bot
+        self.image = Player.images_player_front[0]
+        self.original_image = self.image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.add(group)
 
         self.blood_points = 0
+        self.frame_counter = 1
+        self.index_current_image = 0
 
         # Параметры движения
         self.moving_left = False
@@ -74,6 +85,49 @@ class Player(pygame.sprite.Sprite):
             if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
                 self.is_sprinting = False
                 self.current_speed = self.base_speed
+
+        # print(f'self.moving_left = |{self.moving_left}|',
+        #       f'self.moving_right = |{self.moving_right}|',
+        #       f'self.moving_up = |{self.moving_up}|',
+        #       f'self.moving_down = |{self.moving_down}|',)
+        
+        if self.moving_down and not (self.moving_left or self.moving_right):
+            self.frame_counter += 1
+
+            if self.frame_counter % 3 == 0:
+                self.original_image = Player.images_player_front[self.index_current_image]
+                self.index_current_image += 1
+                self.index_current_image %= 4
+            
+            self.image = Player.images_player_front[self.index_current_image]
+            # print('self.index_current_image =', self.index_current_image,
+            #       'self.frame_counter = ', self.frame_counter)
+        else:
+            self.frame_counter = 0
+            self.index_current_image = 0
+
+            if self.moving_up:
+                self.original_image = Player.image_player_back_up
+                if self.moving_right:
+                    self.image = rotate_image(self.original_image, -45)
+                elif self.moving_left:
+                    self.image = rotate_image(self.original_image, 45)
+                else:
+                    self.image = self.original_image
+
+            elif self.moving_right:
+                if self.moving_down:
+                    self.image = rotate_image(Player.image_player_back_right, -45)
+                else:
+                    self.image = Player.image_player_back_right
+
+            elif self.moving_left:
+                if self.moving_down:
+                    self.image = rotate_image(Player.image_player_back_left, 45)
+                else:
+                    self.image = Player.image_player_back_left
+        # Обновляем rect для изображения
+        self.rect = self.image.get_rect(center=self.rect.center)
     
     def collect_blood(self, blood_sprites, bloods):
         for blood in blood_sprites.sprites():
