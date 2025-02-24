@@ -9,6 +9,36 @@ import json
 import sys
 
 
+def draw_death_menu(screen):
+    font = pg.font.Font(None, 74)
+    small_font = pg.font.Font(None, 36)
+
+    # Затемнение экрана
+    dark = pg.Surface(screen.get_size()).convert_alpha()
+    dark.fill((0, 0, 0, 128))
+    screen.blit(dark, (0, 0))
+
+    # Текст "GAME OVER"
+    text = font.render('GAME OVER', True, (255, 0, 0))
+    text_rect = text.get_rect(
+        center=(screen.get_width() // 2, screen.get_height() // 2 - 50))
+    screen.blit(text, text_rect)
+
+    # Подсказки управления
+    restart_text = small_font.render(
+        'Нажмите R для перезапуска', True, (255, 255, 255))
+    quit_text = small_font.render(
+        'Нажмите Q для выхода', True, (255, 255, 255))
+
+    restart_rect = restart_text.get_rect(
+        center=(screen.get_width() // 2, screen.get_height() // 2 + 30))
+    quit_rect = quit_text.get_rect(
+        center=(screen.get_width() // 2, screen.get_height() // 2 + 70))
+
+    screen.blit(restart_text, restart_rect)
+    screen.blit(quit_text, quit_rect)
+
+
 def get_info_from_db(num_level):
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
@@ -29,7 +59,6 @@ def get_info_from_db(num_level):
 def start_round():
     if len(sys.argv) > 1:
         num_level = int(sys.argv[1])
-        # Здесь код запуска уровня с номером num_level
         print(f"Запуск уровня {num_level}")
     else:
         print("Не указан номер уровня")
@@ -37,6 +66,7 @@ def start_round():
 
     pg.init()
     set_up = setup()
+    screen = pg.display.get_surface()
     paths_bots = get_info_from_db(num_level)
     print(paths_bots)
     if not paths_bots:
@@ -58,7 +88,43 @@ def start_round():
                   for i in range(set_up[3])] for key, bot in bots.items()}
     boundaries = []
 
-    render_round(set_up, bots, rays, boundaries, bot_sprites, num_level)
+    running = True
+    player_detected = False
+
+    while running:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+                return "quit"
+
+            if player_detected:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_r:
+                        return start_round()
+                    elif event.key == pg.K_q:
+                        pg.quit()
+                        sys.exit()
+
+        if not player_detected:
+            render_result = render_round(
+                set_up, bots, rays, boundaries, bot_sprites, num_level)
+            if render_result == "detected":
+                player_detected = True
+                continue
+            elif render_result == "complete":
+                print(f"Уровень {num_level} пройден!")
+                pg.quit()
+                sys.exit()
+            elif render_result == "quit":
+                return "quit"
+
+        if player_detected:
+            screen.fill((0, 0, 0))
+            draw_death_menu(screen)
+            pg.display.flip()
+
+    pg.quit()
+    return "quit"
 
 
 if __name__ == "__main__":

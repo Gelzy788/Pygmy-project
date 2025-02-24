@@ -9,6 +9,7 @@ from ray_cast.ray import Ray
 from bot import Bot
 from set_level.blood import Blood
 from set_level.player import Player
+from set_level.door import Door
 
 
 def setup():
@@ -58,6 +59,7 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
 
     # Создание спрайтов для игрока
     player_sprites = pg.sprite.Group()
+    door_sprites = pg.sprite.Group()
 
     info = get_info_from_db(num_level)
     if info:
@@ -65,9 +67,12 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         player = Player(player_sprites, cord_player[0], cord_player[1])
         player.screen_width = screen_w
         player.screen_height = screen_h
+
+        # Создаем дверь в конце уровня
+        door = Door(door_sprites, screen_w - 100, screen_h // 2 - 40)
     else:
         print(f'Данные для уровня {num_level} не найдены')
-        return
+        return None
 
     # Если границы включены, добавляем их
     if border_on:
@@ -88,40 +93,43 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     for x, y in bloods:
         Blood(blood_sprites, x, y)
 
-    k = 0
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                running = False
+                return "quit"
             elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
                 player.update(event)
 
         player.move()
 
+        # Проверка достижения двери
+        if player.rect.colliderect(door.rect):
+            print("Level Complete!")
+            return "complete"
+
         screen.fill((0, 0, 0))
 
         for key, bot in bots.items():
-            singal = bot.update(
+            signal = bot.update(
                 screen, viewing_angle, rays[key], boundaries, (player.rect.x, player.rect.y))
-            # отлавливаем сигнал о том что бот заметил игрока
-            if singal:
+            if signal:
                 print('-' * 10, 'БОТ ВАС ЗАМЕТИЛ', '-' * 10)
-                # pass
+                return "detected"
+
         # Обновляем границы
         for b in boundaries:
             b.update(screen)
 
         blood_sprites.draw(screen)
         bot_sprites.draw(screen)
+        door_sprites.draw(screen)  # Отрисовываем дверь
         player_sprites.draw(screen)
 
-        k += 1
-        # print(k)
         pg.display.flip()
-        clock.tick(360)
-        pg.display.update()
-        # надо убирать, пока что оставил, т.к. у меня из-за этого боты не дергаются
+        clock.tick(60)
         pg.time.wait(25)
+
+    return None
 
 
 if __name__ == "__main__":

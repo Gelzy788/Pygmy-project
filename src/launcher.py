@@ -49,13 +49,17 @@ def start_level(user_id, level):
         start_round_path = os.path.join(
             os.path.dirname(__file__), 'bots', 'start_round.py')
 
+        # Закрываем текущее окно pygame перед запуском нового уровня
+        pygame.display.quit()
+        pygame.quit()
+
         # Запускаем уровень через start_round.py
         try:
             subprocess.run(
                 [sys.executable, start_round_path, str(level)], check=True)
-            return "continue"
+            sys.exit()  # Выходим из игры после завершения уровня
         except subprocess.CalledProcessError:
-            return "quit"
+            sys.exit()  # Выходим при ошибке
 
 
 def saves_menu():
@@ -103,8 +107,11 @@ def saves_menu():
 
                                 # Запускаем соответствующий уровень
                                 result = start_level(user_id, current_level)
-                                if result == "quit":
-                                    return
+                                if result == "menu":
+                                    return  # Возвращаемся в главное меню
+                                elif result == "quit":
+                                    pygame.quit()
+                                    sys.exit()
 
             if event.type == pygame.KEYDOWN:
                 if input_active:
@@ -202,3 +209,4 @@ def settings_menu():
 if __name__ == "__main__":
     main_menu()
     db.close()
+ы
