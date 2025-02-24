@@ -6,6 +6,7 @@ from ray_cast.ray import Ray
 from bot import Bot
 import sqlite3
 import json
+import sys
 
 
 def get_info_from_db(num_level):
