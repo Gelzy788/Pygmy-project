@@ -65,11 +65,8 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     if info:
         bloods, cord_player, walls = info
         player = Player(player_sprites, cord_player[0], cord_player[1])
-        player.screen_width = screen_w
-        player.screen_height = screen_h
-
-        # Создаем дверь в конце уровня
-        door = Door(door_sprites, screen_w - 100, screen_h // 2 - 40)
+        player.screen_width = screen_w   #
+        player.screen_height = screen_h  #
     else:
         print(f'Данные для уровня {num_level} не найдены')
         return None
@@ -95,17 +92,15 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
 
     while running:
         for event in pg.event.get():
+            keys = pg.key.get_pressed()
             if event.type == pg.QUIT:
-                return "quit"
-            elif event.type == pg.KEYDOWN or event.type == pg.KEYUP:
+                running = False
+            elif event.type == pg.KEYDOWN or event.type == pg.KEYUP or keys[pg.K_UP] or keys[pg.K_DOWN] or keys[pg.K_LEFT]\
+                    or keys[pg.K_RIGHT] or keys[pg.K_w] or keys[pg.K_a] or keys[pg.K_s] or keys[pg.K_d]:  # проблема в том что я проверяю только нажатие или отпускаие клавишы, а задержку нет
                 player.update(event)
 
-        player.move()
-
-        # Проверка достижения двери
-        if player.rect.colliderect(door.rect):
-            print("Level Complete!")
-            return "complete"
+        player.move(boundaries)
+        player.collect_blood(blood_sprites, bloods)
 
         screen.fill((0, 0, 0))
 
@@ -119,6 +114,9 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
         # Обновляем границы
         for b in boundaries:
             b.update(screen)
+
+        # Рисуем очки крови
+        player.draw_blood_points(screen)
 
         blood_sprites.draw(screen)
         bot_sprites.draw(screen)
