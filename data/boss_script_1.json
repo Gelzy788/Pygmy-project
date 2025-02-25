@@ -1,118 +1,55 @@
 {
-    "default_fight": {
-        "shield_sequence": [
-            {
-                "time": 180,
-                "action": "activate"
-            },
-            {
-                "time": 300,
-                "action": "deactivate"
-            },
-            {
-                "time": 420,
-                "action": "activate"
-            },
-            {
-                "time": 540,
-                "action": "deactivate"
-            }
-        ],
-        "attack_sequence": [
-            {
-                "time": 60,
-                "attack": "slow_field"
-            },
-            {
-                "time": 180,
-                "attack": "attraction"
-            },
-            {
-                "time": 300,
-                "attack": "wave"
-            },
-            {
-                "time": 420,
-                "attack": "big"
-            },
-            {
-                "time": 480,
-                "attack": "acid_pool"
-            },
-            {
-                "time": 540,
-                "attack": "vertical"
-            },
-            {
-                "time": 600,
-                "attack": "slow_field"
-            }
-        ],
-        "random_attacks": {
-            "start_time": 720,
-            "interval": 180,
-            "attacks": [
-                "attraction",
-                "wave",
-                "big",
-                "vertical",
-                "shield",
-                "slow_field",
-                "acid_pool"
-            ]
+    "shield_sequence": [
+        {
+            "time": 300,
+            "duration": 120
+        },
+        {
+            "time": 600,
+            "duration": 120
+        },
+        {
+            "time": 900,
+            "duration": 120
         }
-    },
-    "aggressive_fight": {
-        "shield_sequence": [
-            {
-                "time": 120,
-                "action": "activate"
-            },
-            {
-                "time": 180,
-                "action": "deactivate"
-            }
-        ],
-        "attack_sequence": [
-            {
-                "time": 60,
-                "attack": "slow_field"
-            },
-            {
-                "time": 120,
-                "attack": "acid_pool"
-            },
-            {
-                "time": 180,
-                "attack": "big"
-            },
-            {
-                "time": 240,
-                "attack": "wave"
-            },
-            {
-                "time": 300,
-                "attack": "vertical"
-            },
-            {
-                "time": 360,
-                "attack": "slow_field"
-            },
-            {
-                "time": 420,
-                "attack": "attraction"
-            }
-        ],
-        "random_attacks": {
-            "start_time": 480,
-            "interval": 120,
-            "attacks": [
-                "big",
-                "wave",
-                "vertical",
-                "slow_field",
-                "acid_pool"
-            ]
+    ],
+    "attack_sequence": [
+        {
+            "time": 60,
+            "type": "BigProjectile"
+        },
+        {
+            "time": 180,
+            "type": "Wave"
+        },
+        {
+            "time": 420,
+            "type": "VerticalBeam"
+        },
+        {
+            "time": 540,
+            "type": "Attraction"
+        },
+        {
+            "time": 780,
+            "type": "SlowField"
+        },
+        {
+            "time": 840,
+            "type": "AcidPool"
         }
+    ],
+    "random_attacks": {
+        "enabled": true,
+        "min_delay": 120,
+        "max_delay": 240,
+        "types": [
+            "BigProjectile",
+            "Wave",
+            "VerticalBeam",
+            "Attraction",
+            "SlowField",
+            "AcidPool"
+        ]
     }
 }

@@ -13,16 +13,18 @@ def scripted_boss_fight(script_name="default_fight"):
     clock = pygame.time.Clock()
     player = Player(all_sprites)
     boss = Boss(all_sprites)
-
-    # Загружаем скрипт боя
     script_manager = BossScriptManager()
+
     if not script_manager.load_script(script_name):
-        print(f"Error: Script '{script_name}' not found!")
         return "quit"
 
     shield_sequence = script_manager.get_shield_sequence()
     attack_sequence = script_manager.get_attack_sequence()
     random_attacks = script_manager.get_random_attack_config()
+
+    shield_index = 0
+    attack_index = 0
+    last_random_attack_time = 0
 
     frame_counter = 0
     mouse_x, mouse_y = 400, 300
@@ -67,56 +69,55 @@ def scripted_boss_fight(script_name="default_fight"):
                 pygame.display.flip()
                 clock.tick(FPS)
 
-        # Проверяем последовательность щита
-        for shield_action in shield_sequence:
-            if frame_counter == shield_action["time"]:
-                if shield_action["action"] == "activate":
-                    boss.activate_shield()
-                else:
-                    boss.deactivate_shield()
+        # Обработка щита
+        if shield_index < len(shield_sequence):
+            shield_event = shield_sequence[shield_index]
+            if frame_counter == shield_event["time"]:
+                boss.activate_shield()
+            elif frame_counter == shield_event["time"] + shield_event["duration"]:
+                boss.deactivate_shield()
+                shield_index += 1
 
-        # Проверяем заскриптованные атаки
-        for attack in attack_sequence:
-            if frame_counter == attack["time"]:
-                if attack["attack"] == "slow_field":
-                    # Создаем поле в случайной точке рядом с игроком
-                    target_x = player.rect.centerx + random.randint(-100, 100)
-                    target_y = player.rect.centery + random.randint(-100, 100)
-                    boss.SlowFieldAttack(target_x, target_y)
-                elif attack["attack"] == "attraction":
-                    boss.AttractionAttack(player)
-                elif attack["attack"] == "wave":
-                    boss.WaveAttack()
-                elif attack["attack"] == "big":
+        # Обработка атак по скрипту
+        if attack_index < len(attack_sequence):
+            attack_event = attack_sequence[attack_index]
+            if frame_counter == attack_event["time"]:
+                attack_type = attack_event["type"]
+                if attack_type == "BigProjectile":
                     boss.BigProjectileAttack(player)
-                elif attack["attack"] == "vertical":
-                    boss.VerticalBeamAttack(mouse_x)
-                elif attack["attack"] == "acid_pool":
-                    target_x = player.rect.centerx
-                    boss.AcidPoolAttack(target_x)
+                elif attack_type == "Wave":
+                    boss.WaveAttack()
+                elif attack_type == "VerticalBeam":
+                    boss.VerticalBeamAttack(player.rect.centerx)
+                elif attack_type == "Attraction":
+                    boss.AttractionAttack(player)
+                elif attack_type == "SlowField":
+                    boss.SlowFieldAttack(
+                        player.rect.centerx, player.rect.centery)
+                elif attack_type == "AcidPool":
+                    boss.AcidPoolAttack(player.rect.centerx)
+                attack_index += 1
 
-        # Случайные атаки после заскриптованной последовательности
-        if random_attacks and frame_counter > random_attacks["start_time"]:
-            if random.randint(0, random_attacks["interval"]) == 0:
-                attack_type = random.choice(random_attacks["attacks"])
-                if attack_type == "attraction":
-                    boss.AttractionAttack(player)
-                elif attack_type == "wave":
-                    boss.WaveAttack()
-                elif attack_type == "big":
-                    boss.BigProjectileAttack(player)
-                elif attack_type == "vertical":
-                    x = random.randint(100, 700)
-                    boss.VerticalBeamAttack(x)
-                elif attack_type == "shield":
-                    boss.activate_shield()
-                elif attack_type == "slow_field":
-                    target_x = player.rect.centerx + random.randint(-100, 100)
-                    target_y = player.rect.centery + random.randint(-100, 100)
-                    boss.SlowFieldAttack(target_x, target_y)
-                elif attack_type == "acid_pool":
-                    target_x = player.rect.centerx
-                    boss.AcidPoolAttack(target_x)
+        # Случайные атаки
+        if random_attacks and random_attacks["enabled"]:
+            current_time = frame_counter
+            if current_time - last_random_attack_time >= random_attacks["min_delay"]:
+                if random.randint(0, random_attacks["max_delay"] - random_attacks["min_delay"]) == 0:
+                    attack_type = random.choice(random_attacks["types"])
+                    if attack_type == "BigProjectile":
+                        boss.BigProjectileAttack(player)
+                    elif attack_type == "Wave":
+                        boss.WaveAttack()
+                    elif attack_type == "VerticalBeam":
+                        boss.VerticalBeamAttack(player.rect.centerx)
+                    elif attack_type == "Attraction":
+                        boss.AttractionAttack(player)
+                    elif attack_type == "SlowField":
+                        boss.SlowFieldAttack(
+                            player.rect.centerx, player.rect.centery)
+                    elif attack_type == "AcidPool":
+                        boss.AcidPoolAttack(player.rect.centerx)
+                    last_random_attack_time = current_time
 
         frame_counter += 1
 

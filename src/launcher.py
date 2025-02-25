@@ -2,6 +2,7 @@ import pygame
 import sys
 import subprocess
 import os
+import sqlite3
 from boss_fight.game import scripted_boss_fight
 from database import Database
 
@@ -42,8 +43,22 @@ def draw_input_box(screen, text, input_rect):
 
 
 def start_level(user_id, level):
-    if level == 5:  # Предположим, что 5 уровень - это босс файт
-        return scripted_boss_fight("aggressive_fight")
+    if level == 5:  # Босс файт
+        # Получаем путь к скрипту босса из базы данных
+        conn = sqlite3.connect('data/levels.sqlite')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT script_paths FROM info_levels WHERE num_lvl = ?
+        ''', (level,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            script_path = result[0]  # Получаем путь к скрипту
+            return scripted_boss_fight(script_path)
+        else:
+            print(f"Ошибка: не найден скрипт для уровня {level}")
+            return "quit"
     else:
         # Получаем путь к start_round.py относительно launcher.py
         start_round_path = os.path.join(
@@ -78,9 +93,13 @@ def saves_menu():
             saves_dict[index + 1] = (save[0], save[1])
 
         save_slots = []
+        delete_buttons = []  # Список кнопок удаления
         for i in range(5):
             slot_rect = pygame.Rect(WIDTH//2 - 150, 150 + i*80, 300, 60)
             save_slots.append(slot_rect)
+            # Кнопка удаления справа от слота
+            delete_button = pygame.Rect(WIDTH//2 + 160, 165 + i*80, 30, 30)
+            delete_buttons.append(delete_button)
 
         mx, my = pygame.mouse.get_pos()
 
@@ -90,6 +109,16 @@ def saves_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # ЛКМ
+                    # Проверяем клики по кнопкам удаления
+                    for i, delete_button in enumerate(delete_buttons):
+                        if delete_button.collidepoint(mx, my):
+                            slot_number = i + 1
+                            if slot_number in saves_dict:
+                                user_id = saves_dict[slot_number][0]
+                                if db.delete_save(user_id):
+                                    print(f"Сохранение {slot_number} удалено")
+                                continue
+
                     # Проверяем клики по слотам
                     for i, slot in enumerate(save_slots):
                         if slot.collidepoint(mx, my):
@@ -98,14 +127,11 @@ def saves_menu():
                                 input_active = True
                                 current_save_slot = slot_number
                             else:
-                                # Получаем текущий уровень пользователя
                                 user_id = saves_dict[slot_number][0]
                                 current_level = db.get_current_level(user_id)
-
-                                # Запускаем соответствующий уровень
                                 result = start_level(user_id, current_level)
                                 if result == "menu":
-                                    return  # Возвращаемся в главное меню
+                                    return
                                 elif result == "quit":
                                     pygame.quit()
                                     sys.exit()
@@ -125,25 +151,25 @@ def saves_menu():
                 if event.key == pygame.K_ESCAPE:
                     return
 
-        # Отрисовка слотов сохранений
-        for i, slot in enumerate(save_slots):
-            slot_number = i + 1
-            pygame.draw.rect(screen, GRAY, slot)
+        # Отрисовка слотов и кнопок удаления
+        for i in range(5):
+            slot_rect = save_slots[i]
+            delete_button = delete_buttons[i]
 
-            if slot_number in saves_dict:
+            pygame.draw.rect(screen, GRAY, slot_rect)
+            if i + 1 in saves_dict:
                 # Отрисовка информации о сохранении
-                save_id, nickname = saves_dict[slot_number]
-                draw_text(nickname, save_font, BLACK,
-                          screen, slot.centerx, slot.centery)
+                nickname = saves_dict[i + 1][1]
+                draw_text(f'Слот {i + 1}: {nickname}', save_font,
+                          BLACK, screen, slot_rect.centerx, slot_rect.centery)
 
-                # Кнопка удаления
-                delete_rect = pygame.Rect(slot.right - 30, slot.y + 15, 20, 20)
-                pygame.draw.rect(screen, RED, delete_rect)
-                draw_text("×", save_font, WHITE, screen,
-                          delete_rect.centerx, delete_rect.centery)
+                # Отрисовка кнопки удаления
+                pygame.draw.rect(screen, RED, delete_button)
+                draw_text('X', save_font, WHITE, screen,
+                          delete_button.centerx, delete_button.centery)
             else:
-                draw_text("+", save_font, BLACK, screen,
-                          slot.centerx, slot.centery)
+                draw_text(f'Слот {i + 1}: Пусто', save_font, BLACK,
+                          screen, slot_rect.centerx, slot_rect.centery)
 
         # Отрисовка поля ввода
         if input_active:
@@ -204,5 +230,25 @@ def settings_menu():
 
 
 if __name__ == "__main__":
-    main_menu()
-    db.close()
+    if len(sys.argv) > 1 and sys.argv[1] == 'boss':
+        # Прямой запуск босс-файта
+        user_id = int(sys.argv[2])
+
+        # Получаем путь к скрипту босса из базы данных
+        conn = sqlite3.connect('data/levels.sqlite')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT script_paths FROM info_levels WHERE num_lvl = ?
+        ''', (5,))  # 5 - уровень босса
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            script_path = result[0]  # Получаем путь к скрипту
+            scripted_boss_fight(script_path)
+        else:
+            print(f"Ошибка: не найден скрипт для уровня босса")
+    else:
+        # Обычный запуск лаунчера
+        main_menu()
+        db.close()

@@ -16,6 +16,17 @@ class Database:
 
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
+        self.create_tables()
+
+    def create_tables(self):
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                current_level INTEGER DEFAULT 1
+            )
+        ''')
+        self.conn.commit()
 
     def get_all_saves(self):
         self.cursor.execute(
@@ -30,9 +41,15 @@ class Database:
         self.conn.commit()
         return self.cursor.lastrowid
 
-    def delete_save(self, save_id):
-        self.cursor.execute('DELETE FROM user WHERE id = ?', (save_id,))
-        self.conn.commit()
+    def delete_save(self, user_id):
+        """Удаляет сохранение по user_id"""
+        try:
+            self.cursor.execute('DELETE FROM user WHERE id = ?', (user_id,))
+            self.conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Ошибка при удалении сохранения: {e}")
+            return False
 
     def get_current_level(self, user_id):
         self.cursor.execute(

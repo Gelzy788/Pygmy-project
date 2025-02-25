@@ -8,6 +8,7 @@ import sqlite3
 import json
 import sys
 import subprocess
+import os
 
 
 def draw_death_menu(screen):
@@ -128,22 +129,40 @@ def start_round():
                     current_blood = cursor.fetchone()[0] or 0
                     new_blood = current_blood + blood_points
 
+                    next_level = num_level + 1
+
                     # Обновляем и кровь, и текущий уровень
                     cursor.execute('''
                         UPDATE user 
                         SET blood = ?, current_level = ? 
                         WHERE id = ?
-                    ''', (new_blood, num_level + 1, user_id))
+                    ''', (new_blood, next_level, user_id))
 
                     conn.commit()
                     conn.close()
 
-                    # Запускаем следующий уровень
-                    next_level = num_level + 1
-                    pg.quit()
-                    subprocess.run([sys.executable, sys.argv[0],
-                                   str(next_level), str(user_id)])
-                    sys.exit()
+                    # Проверяем, является ли следующий уровень боссом
+                    if next_level == 5:  # Если следующий уровень - босс
+                        pg.quit()
+                        # Получаем путь к launcher.py
+                        launcher_path = os.path.join(
+                            os.path.dirname(os.path.dirname(__file__)),
+                            'launcher.py'
+                        )
+                        # Запускаем босс-файт через launcher
+                        subprocess.run([
+                            sys.executable,
+                            launcher_path,
+                            'boss',  # Специальный аргумент для запуска босс-файта
+                            str(user_id)
+                        ])
+                        sys.exit()
+                    else:
+                        # Запускаем следующий обычный уровень
+                        pg.quit()
+                        subprocess.run([sys.executable, sys.argv[0],
+                                        str(next_level), str(user_id)])
+                        sys.exit()
             elif render_result == "detected":
                 player_detected = True
                 continue
