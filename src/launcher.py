@@ -54,8 +54,15 @@ def start_level(user_id, level):
         conn.close()
 
         if result:
-            script_path = result[0]  # Получаем путь к скрипту
-            return scripted_boss_fight(script_path)
+            script_path = result[0]
+            while True:
+                fight_result = scripted_boss_fight(script_path)
+                if fight_result == "restart":
+                    continue  # Перезапускаем босс-файт
+                elif fight_result == "quit":
+                    return "quit"
+                else:
+                    return fight_result
         else:
             print(f"Ошибка: не найден скрипт для уровня {level}")
             return "quit"

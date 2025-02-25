@@ -1,11 +1,35 @@
 import pygame
 import random
-from boss_fight.settings import WIDTH, WHITE, RED, FPS, screen
+from boss_fight.settings import WIDTH, HEIGHT, WHITE, RED, FPS, screen
 from boss_fight.boss_fight_player import Player
 from boss_fight.boss import Boss
 from boss_fight.projectile import BigProjectile
 from boss_fight.utils import draw_death_menu
 from boss_fight.boss_script_manager import BossScriptManager
+
+
+def draw_death_menu(screen):
+    # Затемнение экрана
+    dark = pygame.Surface(screen.get_size()).convert_alpha()
+    dark.fill((0, 0, 0, 128))  # Полупрозрачный черный
+    screen.blit(dark, (0, 0))
+
+    # Текст "GAME OVER"
+    font = pygame.font.Font(None, 74)
+    text = font.render('GAME OVER', True, RED)
+    text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2 - 50))
+    screen.blit(text, text_rect)
+
+    # Подсказки управления
+    small_font = pygame.font.Font(None, 36)
+    restart_text = small_font.render('Нажмите R для перезапуска', True, WHITE)
+    quit_text = small_font.render('Нажмите Q для выхода', True, WHITE)
+
+    restart_rect = restart_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 30))
+    quit_rect = quit_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 70))
+
+    screen.blit(restart_text, restart_rect)
+    screen.blit(quit_text, quit_rect)
 
 
 def scripted_boss_fight(script_name="default_fight"):
@@ -47,12 +71,13 @@ def scripted_boss_fight(script_name="default_fight"):
                     if event.type == pygame.QUIT:
                         return "quit"
 
-                death_keys = pygame.key.get_pressed()
-                if death_keys[pygame.K_r]:
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_r]:  # Перезапуск
                     return "restart"
-                if death_keys[pygame.K_q]:
+                if keys[pygame.K_q]:  # Выход
                     return "quit"
 
+                # Отрисовка текущего состояния игры
                 screen.fill(WHITE)
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
@@ -64,7 +89,10 @@ def scripted_boss_fight(script_name="default_fight"):
                 boss.vertical_beams.draw(screen)
                 player.projectiles.draw(screen)
                 boss.wave_segments.draw(screen)
+                boss.slow_fields.draw(screen)
+                boss.acid_pools.draw(screen)
 
+                # Отрисовка меню смерти поверх игры
                 draw_death_menu(screen)
                 pygame.display.flip()
                 clock.tick(FPS)
