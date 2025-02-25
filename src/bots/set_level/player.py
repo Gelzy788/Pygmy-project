@@ -35,18 +35,19 @@ class Player(pygame.sprite.Sprite):
         f'player/player_back_right.png', scale=1)
     image_player_back_up = load_image(f'player/player_back_up.png', scale=1)
 
-    def __init__(self, group, x, y, initial_blood=0):
+    def __init__(self, group, x, y, blood_points=0, speed=6):
         super().__init__(group)
         self.image = Player.images_player_front[0]
         self.original_image = self.image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.speed = 1
+        self.blood_points = blood_points
+        self.level_blood_points = 0
+        self.speed = speed
         self.add(group)
 
-        self.total_blood = initial_blood  # Общее количество крови
-        self.level_blood_points = 0  # Кровь, собранная на текущем уровне
+        self.total_blood = blood_points  # Общее количество крови
         self.frame_counter = 1
         self.index_current_image = 0
 
@@ -61,6 +62,9 @@ class Player(pygame.sprite.Sprite):
         self.sprint_speed = 10    # Скорость при спринте
         self.current_speed = self.base_speed
         self.safe_distance = 3
+
+        self.screen_width = 800
+        self.screen_height = 800
 
     def update(self, event):
         # Обработка нажатий клавиш
@@ -91,11 +95,6 @@ class Player(pygame.sprite.Sprite):
                 self.is_sprinting = False
                 self.current_speed = self.base_speed
 
-        # print(f'self.moving_left = |{self.moving_left}|',
-        #       f'self.moving_right = |{self.moving_right}|',
-        #       f'self.moving_up = |{self.moving_up}|',
-        #       f'self.moving_down = |{self.moving_down}|',)
-
         if self.moving_down and not (self.moving_left or self.moving_right):
             self.frame_counter += 1
 
@@ -105,8 +104,6 @@ class Player(pygame.sprite.Sprite):
                 self.index_current_image %= 4
 
             self.image = Player.images_player_front[self.index_current_image]
-            # print('self.index_current_image =', self.index_current_image,
-            #       'self.frame_counter = ', self.frame_counter)
         else:
             self.frame_counter = 0
             self.index_current_image = 0
@@ -193,26 +190,43 @@ class Player(pygame.sprite.Sprite):
         return False
 
     def move(self, boundaries):
-        dx, dy = 0, 0
+        keys = pygame.key.get_pressed()
+        old_x = self.rect.x
+        old_y = self.rect.y
+        dx = 0
+        dy = 0
 
-        if self.moving_left:
+        # Определяем направление движения
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             dx -= self.speed
-        if self.moving_right:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             dx += self.speed
-        if self.moving_up:
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
             dy -= self.speed
-        if self.moving_down:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             dy += self.speed
 
+        # Нормализация диагонального движения
         if dx != 0 and dy != 0:
-            dx *= 0.7071
+            dx *= 0.7071  # 1/√2
             dy *= 0.7071
 
-        new_x = self.rect.x + dx * self.current_speed
-        new_y = self.rect.y + dy * self.current_speed
+        # Проверяем новые координаты
+        new_x = self.rect.x + dx
+        new_y = self.rect.y + dy
 
+        # Проверяем столкновения
         if not self.check_collision(new_x, self.rect.y, boundaries):
             self.rect.x = new_x
-
         if not self.check_collision(self.rect.x, new_y, boundaries):
             self.rect.y = new_y
+
+        # Проверка границ экрана
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > self.screen_width:
+            self.rect.right = self.screen_width
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.bottom > self.screen_height:
+            self.rect.bottom = self.screen_height

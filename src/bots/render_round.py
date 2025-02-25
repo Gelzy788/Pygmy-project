@@ -64,7 +64,7 @@ def get_info_from_db(num_level):
         return None
 
 
-def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], boundaries: list[Boundary], bot_sprites: pg.sprite.Group, num_level, user_id):
+def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], boundaries: list[Boundary], bot_sprites: pg.sprite.Group, num_level, user_id, player_speed):
     screen, border_on, num_walls, num_rays, screen_w, screen_h, viewing_angle = setup
 
     clock = pg.time.Clock()
@@ -89,9 +89,14 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
             print("Ошибка: не заданы координаты игрока")
             return None
 
-        # Передаем текущее количество крови при создании игрока
+        # Передаем текущее количество крови и скорость при создании игрока
         player = Player(
-            player_sprites, cord_player[0], cord_player[1], current_blood)
+            player_sprites,
+            cord_player[0],
+            cord_player[1],
+            current_blood,
+            player_speed  # Передаем скорость
+        )
         player.screen_width = screen_w
         player.screen_height = screen_h
 
@@ -184,4 +189,4 @@ if __name__ == "__main__":
     ]
 
     # Запуск игры
-    render_round(set_up, particles, rays, boundaries, coords, 1, 1)
+    render_round(set_up, particles, rays, boundaries, coords, 1, 1, 5)

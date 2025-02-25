@@ -1,26 +1,39 @@
 from ray_cast.particle import Particle
 import pygame as pg
 import math
+import sqlite3
 
 drawline = pg.draw.line
 
 
 class Ray:
-    def __init__(self, p: Particle, heading: float = 0):
+    def __init__(self, p: Particle, heading: float = 0, user_id: int = None):
         self.start = p.pos
         self.heading = heading
         self.end: pg.math.Vector2 = pg.math.Vector2()
         self.image = None
-        self.length = 100  # длина луча
+
+        # Получаем значение скрытности из БД
+        if user_id is not None:
+            conn = sqlite3.connect('data/levels.sqlite')
+            cursor = conn.cursor()
+            cursor.execute('SELECT stealth FROM user WHERE id = ?', (user_id,))
+            result = cursor.fetchone()
+            conn.close()
+            # Устанавливаем длину луча равной значению скрытности
+            self.length = result[0] if result else 100
+        else:
+            self.length = 100  # значение по умолчанию
+
         self.signal = False
 
-    def update(self, screen: pg.display, p: Particle, boundaries: list, cord_player, angle_rotation: int=0):
+    def update(self, screen: pg.display, p: Particle, boundaries: list, cord_player, angle_rotation: int = 0):
         self.start = p.pos
-        self.end.from_polar((10000, self.heading - angle_rotation))  
+        self.end.from_polar((10000, self.heading - angle_rotation))
 
         closest = float("inf")
         new_end = pg.Vector2()
-        flag_r = False # <======================================================
+        flag_r = False  # <======================================================
         x3 = self.start.x
         x4 = self.end.x
         y3 = self.start.y
@@ -47,8 +60,7 @@ class Ray:
                 dist = self.start.distance_to((x, y))
                 if dist < closest:
                     closest = dist
-                    new_end.xy = x, y # точка пересечения
-
+                    new_end.xy = x, y  # точка пересечения
 
         '''
         # рабочий способ
@@ -86,7 +98,7 @@ class Ray:
         '''
 
         if closest == float("inf"):
-                self.end = self.start
+            self.end = self.start
         else:
             # Устанавливаем конечную точку на основе пересечения
             self.end = new_end
@@ -94,8 +106,10 @@ class Ray:
 
         # Ограничиваем длину луча до self.length
         if self.start.distance_to(self.end) > self.length:
-            direction = (self.end - self.start).normalize()  # Нормализуем вектор направления
-            self.end = self.start + direction * self.length  # Устанавливаем конечную точку на максимальной длине
+            # Нормализуем вектор направления
+            direction = (self.end - self.start).normalize()
+            # Устанавливаем конечную точку на максимальной длине
+            self.end = self.start + direction * self.length
             if Ray.is_player_in_segment_range(pg.Vector2(self.start), pg.Vector2(self.end[0], self.end[1]), pg.Vector2(cord_player), self.length):
                 flag_r = True
                 # print('луч вас увидел')
@@ -108,14 +122,16 @@ class Ray:
                 # print('луч вас увидел')
                 self.signal = True
 
-        self.image = drawline(screen, (255, 0, 0) if flag_r else (100, 100, 100), self.start, self.end, 1)
-        
+        self.image = drawline(screen, (255, 0, 0) if flag_r else (
+            100, 100, 100), self.start, self.end, 1)
+
         if self.signal:
-            self.signal = False # <------------------------------------------------------ нужно убрать для того 
-                                                                                # чтобы раунд сразу заканчивался после того как бот заметил игрока 
+            # <------------------------------------------------------ нужно убрать для того
+            self.signal = False
+            # чтобы раунд сразу заканчивался после того как бот заметил игрока
             return True
         return False
-    
+
     def is_player_in_segment_range(start, end, cord_player, max_distance=100, tolerance=5):
         start = pg.Vector2(start)
         end = pg.Vector2(end)
@@ -126,8 +142,9 @@ class Ray:
         player_vec = cord_player - start  # Вектор от start до игрока
 
         # Проекция вектора игрока на вектор линии (скалярное произведение)
-        projection_length = player_vec.dot(line_vec) / line_vec.length_squared()
-        
+        projection_length = player_vec.dot(
+            line_vec) / line_vec.length_squared()
+
         # Вычисляем точку на линии, ближайшую к игроку
         closest_point = start + projection_length * line_vec
 
