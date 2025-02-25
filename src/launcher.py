@@ -53,13 +53,13 @@ def start_level(user_id, level):
         pygame.display.quit()
         pygame.quit()
 
-        # Запускаем уровень через start_round.py
+        # Запускаем уровень через start_round.py с передачей user_id
         try:
             subprocess.run(
-                [sys.executable, start_round_path, str(level)], check=True)
-            sys.exit()  # Выходим из игры после завершения уровня
+                [sys.executable, start_round_path, str(level), str(user_id)], check=True)
+            sys.exit()
         except subprocess.CalledProcessError:
-            sys.exit()  # Выходим при ошибке
+            sys.exit()
 
 
 def saves_menu():
@@ -209,4 +209,3 @@ def settings_menu():
 if __name__ == "__main__":
     main_menu()
     db.close()
-ы

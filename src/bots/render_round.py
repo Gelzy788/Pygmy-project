@@ -32,10 +32,21 @@ def get_info_from_db(num_level):
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
 
-    # Запрос для получения информации по num_lvl
-    result = cursor.execute('''
-        SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
-    ''', (num_level,)).fetchone()
+    # Сначала проверяем наличие колонки door
+    cursor.execute("PRAGMA table_info(info_levels)")
+    columns = [column[1] for column in cursor.fetchall()]
+
+    # Формируем запрос в зависимости от наличия колонки door
+    if 'door' in columns:
+        result = cursor.execute('''
+            SELECT script_paths, bloods, player, walls, door 
+            FROM info_levels WHERE num_lvl = ?
+        ''', (num_level,)).fetchone()
+    else:
+        result = cursor.execute('''
+            SELECT script_paths, bloods, player, walls 
+            FROM info_levels WHERE num_lvl = ?
+        ''', (num_level,)).fetchone()
 
     conn.close()
 
@@ -43,14 +54,17 @@ def get_info_from_db(num_level):
         bloods = json.loads(result[1])
         player = json.loads(result[2])
         walls = json.loads(result[3])
+        # Получаем позицию двери только если колонка существует
+        door_pos = json.loads(
+            result[4]) if 'door' in columns and result[4] else None
 
-        return bloods, player, walls
+        return bloods, player, walls, door_pos
     else:
         # print(f'Данные для уровня {num_level} не найдены')
         return None
 
 
-def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], boundaries: list[Boundary], bot_sprites: pg.sprite.Group, num_level):
+def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], boundaries: list[Boundary], bot_sprites: pg.sprite.Group, num_level, user_id):
     screen, border_on, num_walls, num_rays, screen_w, screen_h, viewing_angle = setup
 
     clock = pg.time.Clock()
@@ -61,12 +75,29 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
     player_sprites = pg.sprite.Group()
     door_sprites = pg.sprite.Group()
 
+    # Получаем текущее количество крови из базы данных
+    conn = sqlite3.connect('data/levels.sqlite')
+    cursor = conn.cursor()
+    cursor.execute('SELECT blood FROM user WHERE id = ?', (user_id,))
+    current_blood = cursor.fetchone()[0] or 0
+    conn.close()
+
     info = get_info_from_db(num_level)
     if info:
-        bloods, cord_player, walls = info
-        player = Player(player_sprites, cord_player[0], cord_player[1])
-        player.screen_width = screen_w   #
-        player.screen_height = screen_h  #
+        bloods, cord_player, walls, door_pos = info
+        if not cord_player:
+            print("Ошибка: не заданы координаты игрока")
+            return None
+
+        # Передаем текущее количество крови при создании игрока
+        player = Player(
+            player_sprites, cord_player[0], cord_player[1], current_blood)
+        player.screen_width = screen_w
+        player.screen_height = screen_h
+
+        # Создаем дверь, если есть координаты
+        if door_pos:
+            door = Door(door_sprites, door_pos[0], door_pos[1])
     else:
         print(f'Данные для уровня {num_level} не найдены')
         return None
@@ -96,11 +127,17 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
             if event.type == pg.QUIT:
                 running = False
             elif event.type == pg.KEYDOWN or event.type == pg.KEYUP or keys[pg.K_UP] or keys[pg.K_DOWN] or keys[pg.K_LEFT]\
-                    or keys[pg.K_RIGHT] or keys[pg.K_w] or keys[pg.K_a] or keys[pg.K_s] or keys[pg.K_d]:  # проблема в том что я проверяю только нажатие или отпускаие клавишы, а задержку нет
+                    or keys[pg.K_RIGHT] or keys[pg.K_w] or keys[pg.K_a] or keys[pg.K_s] or keys[pg.K_d]:
                 player.update(event)
 
         player.move(boundaries)
         player.collect_blood(blood_sprites, bloods)
+
+        # Проверка столкновения с дверью
+        if door_pos:  # Если дверь существует
+            if player.rect.colliderect(door.rect):
+                print(f"Уровень {num_level} пройден!")
+                return "complete", player.level_blood_points  # Возвращаем только новую кровь
 
         screen.fill((0, 0, 0))
 
@@ -125,7 +162,7 @@ def render_round(setup, bots: dict[str, Bot], rays: dict[str, list[Ray]], bounda
 
         pg.display.flip()
         clock.tick(60)
-        pg.time.wait(25)
+        # pg.time.wait(25)
 
     return None
 
@@ -147,4 +184,4 @@ if __name__ == "__main__":
     ]
 
     # Запуск игры
-    render_round(set_up, particles, rays, boundaries, coords)
+    render_round(set_up, particles, rays, boundaries, coords, 1, 1)

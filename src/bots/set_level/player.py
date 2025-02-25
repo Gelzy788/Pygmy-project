@@ -35,7 +35,7 @@ class Player(pygame.sprite.Sprite):
         f'player/player_back_right.png', scale=1)
     image_player_back_up = load_image(f'player/player_back_up.png', scale=1)
 
-    def __init__(self, group, x, y):
+    def __init__(self, group, x, y, initial_blood=0):
         super().__init__(group)
         self.image = Player.images_player_front[0]
         self.original_image = self.image
@@ -45,7 +45,8 @@ class Player(pygame.sprite.Sprite):
         self.speed = 1
         self.add(group)
 
-        self.blood_points = 0
+        self.total_blood = initial_blood  # Общее количество крови
+        self.level_blood_points = 0  # Кровь, собранная на текущем уровне
         self.frame_counter = 1
         self.index_current_image = 0
 
@@ -136,20 +137,18 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def collect_blood(self, blood_sprites, bloods):
-        for blood in blood_sprites.sprites():
-            # Проверяем столкновение игрока с кровью
+        for blood in blood_sprites:
             if self.rect.colliderect(blood.rect):
-                print(
-                    f"Координаты перед удалением спрайта: {blood.rect.x}, {blood.rect.y}")
-                self.blood_points += 1
-                blood.kill()  # Удаляем спрайт
+                blood.kill()
+                self.level_blood_points += 1
+                self.total_blood += 1  # Сразу увеличиваем общее количество
 
     def draw_blood_points(self, screen):
-        font = pygame.font.Font(None, 36)  # Размер шрифта 36
+        font = pygame.font.Font(None, 36)
         text = font.render(
-            # Красный цвет
-            f'Очки крови: {self.blood_points}', True, (255, 0, 0))
-        screen.blit(text, (10, 10))  # Рисуем в левом верхнем углу
+            # Показываем общее количество
+            f'Очки крови: {self.total_blood}', True, (255, 0, 0))
+        screen.blit(text, (10, 10))
 
     def distance_to_line(self, point, line_start, line_end):
         """ Вычисляет расстояние от точки до линии, заданной двумя точками """

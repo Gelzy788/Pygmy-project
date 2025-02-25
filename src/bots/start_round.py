@@ -7,6 +7,7 @@ from bot import Bot
 import sqlite3
 import json
 import sys
+import subprocess
 
 
 def draw_death_menu(screen):
@@ -59,9 +60,10 @@ def get_info_from_db(num_level):
 def start_round():
     if len(sys.argv) > 1:
         num_level = int(sys.argv[1])
+        user_id = int(sys.argv[2])  # Добавляем получение user_id
         print(f"Запуск уровня {num_level}")
     else:
-        print("Не указан номер уровня")
+        print("Не указан номер уровня или id пользователя")
         sys.exit(1)
 
     pg.init()
@@ -107,14 +109,40 @@ def start_round():
 
         if not player_detected:
             render_result = render_round(
-                set_up, bots, rays, boundaries, bot_sprites, num_level)
-            if render_result == "detected":
+                set_up, bots, rays, boundaries, bot_sprites, num_level, user_id)
+
+            # Если получили кортеж (complete, blood_points)
+            if isinstance(render_result, tuple):
+                result_type, blood_points = render_result
+                if result_type == "complete":
+                    print(
+                        f"Уровень {num_level} пройден! Собрано крови: {blood_points}")
+
+                    # Обновляем количество крови в базе данных
+                    conn = sqlite3.connect('data/levels.sqlite')
+                    cursor = conn.cursor()
+
+                    # Получаем текущее количество крови
+                    cursor.execute(
+                        'SELECT blood FROM user WHERE id = ?', (user_id,))
+                    current_blood = cursor.fetchone()[0] or 0
+
+                    # Обновляем количество крови
+                    new_blood = current_blood + blood_points
+                    cursor.execute('UPDATE user SET blood = ? WHERE id = ?',
+                                   (new_blood, user_id))
+                    conn.commit()
+                    conn.close()
+
+                    # Запускаем следующий уровень
+                    next_level = num_level + 1
+                    pg.quit()
+                    subprocess.run([sys.executable, sys.argv[0],
+                                   str(next_level), str(user_id)])
+                    sys.exit()
+            elif render_result == "detected":
                 player_detected = True
                 continue
-            elif render_result == "complete":
-                print(f"Уровень {num_level} пройден!")
-                pg.quit()
-                sys.exit()
             elif render_result == "quit":
                 return "quit"
 

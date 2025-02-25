@@ -2,6 +2,33 @@ import pygame
 import json
 import math
 import sqlite3
+import os
+
+
+def load_image(name, colorkey=None, scale=1):
+    fullname = os.path.join('data', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        # Возвращаем пустую поверхность если файл не найден
+        return pygame.Surface((50, 80))
+    image = pygame.image.load(fullname)
+    size = image.get_size()
+    new_size = (int(size[0] * scale), int(size[1] * scale))
+    image = pygame.transform.scale(image, new_size)
+    return image
+
+
+class Door(pygame.sprite.Sprite):
+    def __init__(self, group, x, y):
+        super().__init__(group)
+        self.width = 50
+        self.height = 80
+        self.image = pygame.Surface((self.width, self.height))
+        self.image.fill((255, 0, 0))  # Красный цвет
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.add(group)
 
 
 def smooth_path(path):
@@ -49,7 +76,7 @@ def writing_path_to_json(paths, num_level):
         json.dump(updated_paths, f, indent=2)
 
 
-def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player):
+def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player, door_pos=None):
     # Преобразование путей
     for i, path in enumerate(temp_paths):
         paths[f'bot_{i}'] = {'path': path, 'speed': 1}
@@ -60,14 +87,30 @@ def add_info_to_db(paths, temp_paths, num_level, walls, bloods, cord_player):
     json_bloods = json.dumps(bloods)
     json_player = json.dumps(cord_player if cord_player else [])
     json_walls = json.dumps(walls)
+    json_door = json.dumps(door_pos if door_pos else [])
 
     conn = sqlite3.connect('data/levels.sqlite')
     cursor = conn.cursor()
-    # SELECT script_paths, bloods, player, walls FROM info_levels WHERE num_lvl = ?
+
+    # Проверяем наличие колонки door
+    cursor.execute("PRAGMA table_info(info_levels)")
+    columns = [column[1] for column in cursor.fetchall()]
+
+    # Добавляем колонку door, только если её нет
+    if 'door' not in columns:
+        try:
+            cursor.execute('''
+                ALTER TABLE info_levels ADD COLUMN door TEXT DEFAULT '[]'
+            ''')
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Колонка уже существует
+
     cursor.execute('''
-        INSERT OR REPLACE INTO info_levels (num_lvl, script_paths, bloods, player, walls)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (num_level, json_paths, json_bloods, json_player, json_walls))
+        INSERT OR REPLACE INTO info_levels 
+        (num_lvl, script_paths, bloods, player, walls, door)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (num_level, json_paths, json_bloods, json_player, json_walls, json_door))
 
     conn.commit()
     conn.close()
@@ -80,8 +123,8 @@ def add_level():
     screen.fill((0, 0, 0))
     pygame.display.set_caption('Создание нового уровня')
 
-    # Создаем группу спрайтов для дверей
     door_sprites = pygame.sprite.Group()
+    door_pos = None  # Добавляем переменную для хранения позиции двери
 
     num_level = int(input('Введите номер уровня: '))
     player = int(input('Будет ли игрок на этом уровне? (1 = да/0 = нет): '))
@@ -92,10 +135,13 @@ def add_level():
     cord_player = ()
     paths = {}
 
+    # Инициализируем координаты для стен
+    x1, y1 = 0, 0
+
     fps = 60
     clock = pygame.time.Clock()
     drawing = False  # режим рисования выключен
-    set_wall = False  # ----------------------------------------<<<<<<
+    set_wall = False
     have_player = False
     set_blood = False
     first_point = False
@@ -105,6 +151,7 @@ def add_level():
     print('---------------------------------|')
     print('Для расстановки стен нажминте "w"|')
     print('Для размещения крови нажмите "b" |')
+    print('Для размещения двери нажмите "p" |')  # Добавляем подсказку
     if have_player:
         print('Для размещения игрока нажмите "g"|')
     print('---------------------------------|')
@@ -116,7 +163,7 @@ def add_level():
             if event.type == pygame.QUIT:
                 running = False
                 add_info_to_db(paths, temp_paths, num_level,
-                               walls, bloods, cord_player)
+                               walls, bloods, cord_player, door_pos)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if set_wall:
                     print('жми, то да се')
@@ -220,7 +267,9 @@ def add_level():
                 if event.key == pygame.K_p:
                     # Разместить дверь в текущей позиции мыши
                     door_x, door_y = pygame.mouse.get_pos()
+                    door_sprites.empty()  # Удаляем предыдущую дверь, если была
                     door = Door(door_sprites, door_x, door_y)
+                    door_pos = [door_x, door_y]  # Сохраняем позицию двери
                     print("Дверь размещена")
             if pygame.key.get_pressed()[pygame.K_z] and pygame.key.get_mods() & pygame.KMOD_LCTRL:
                 if len(screens) > 1:
