@@ -73,13 +73,10 @@ def saves_menu():
         draw_text('Сохранения', font, BLACK, screen, WIDTH//2, 50)
 
         saves = db.get_all_saves()
-        # Создаем словарь с индексами слотов
         saves_dict = {}
         for index, save in enumerate(saves):
-            # index -> (id, nickname)
             saves_dict[index + 1] = (save[0], save[1])
 
-        # Создаем прямоугольники для каждого слота сохранения
         save_slots = []
         for i in range(5):
             slot_rect = pygame.Rect(WIDTH//2 - 150, 150 + i*80, 300, 60)

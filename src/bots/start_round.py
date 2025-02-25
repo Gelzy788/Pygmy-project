@@ -60,7 +60,7 @@ def get_info_from_db(num_level):
 def start_round():
     if len(sys.argv) > 1:
         num_level = int(sys.argv[1])
-        user_id = int(sys.argv[2])  # Добавляем получение user_id
+        user_id = int(sys.argv[2])
         print(f"Запуск уровня {num_level}")
     else:
         print("Не указан номер уровня или id пользователя")
@@ -118,19 +118,23 @@ def start_round():
                     print(
                         f"Уровень {num_level} пройден! Собрано крови: {blood_points}")
 
-                    # Обновляем количество крови в базе данных
+                    # Обновляем базу данных
                     conn = sqlite3.connect('data/levels.sqlite')
                     cursor = conn.cursor()
 
-                    # Получаем текущее количество крови
+                    # Обновляем количество крови
                     cursor.execute(
                         'SELECT blood FROM user WHERE id = ?', (user_id,))
                     current_blood = cursor.fetchone()[0] or 0
-
-                    # Обновляем количество крови
                     new_blood = current_blood + blood_points
-                    cursor.execute('UPDATE user SET blood = ? WHERE id = ?',
-                                   (new_blood, user_id))
+
+                    # Обновляем и кровь, и текущий уровень
+                    cursor.execute('''
+                        UPDATE user 
+                        SET blood = ?, current_level = ? 
+                        WHERE id = ?
+                    ''', (new_blood, num_level + 1, user_id))
+
                     conn.commit()
                     conn.close()
 
