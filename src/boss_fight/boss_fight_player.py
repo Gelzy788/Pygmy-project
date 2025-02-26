@@ -47,6 +47,7 @@ class Player(pygame.sprite.Sprite):
         self.load_sprite_sheet(sprite_path)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
+        self.rect = self.image.get_rect(topleft=(100, 6))
 
         # Анимация
         self.current_animation = 'idle'
@@ -54,13 +55,9 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.2
         self.animation_time = 0
 
-        self.rect = self.image.get_rect()
-        self.rect.x = 100  # Начальная позиция по X
-        self.rect.y = 60
+        self.rect = self.image.get_rect(topleft=(100, 6))
 
-        print(f"HEIGHT: {HEIGHT}")
-        print(f"Player height: {self.height}")
-        print(f"Player initial position: {self.rect.topleft}")
+
         # Создаем иконки эффектов
         self.slow_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
         pygame.draw.circle(self.slow_icon, (0, 191, 255, 200),
@@ -95,6 +92,7 @@ class Player(pygame.sprite.Sprite):
 
         self.rect = pygame.Rect(0, 0, sprite_sheet.get_width() // 6,
                                 sprite_sheet.get_height() // 7)
+        self.rect.topleft = (0, 532)
         for j in range(7):
             for i in range(6):
                 frame_location = (self.rect.w * i, self.rect.h * j)
