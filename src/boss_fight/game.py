@@ -17,7 +17,7 @@ def draw_death_menu(screen):
     # Текст "GAME OVER"
     font = pygame.font.Font(None, 74)
     text = font.render('GAME OVER', True, RED)
-    text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2 - 50))
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
     screen.blit(text, text_rect)
 
     # Подсказки управления
@@ -25,8 +25,8 @@ def draw_death_menu(screen):
     restart_text = small_font.render('Нажмите R для перезапуска', True, WHITE)
     quit_text = small_font.render('Нажмите Q для выхода', True, WHITE)
 
-    restart_rect = restart_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 30))
-    quit_rect = quit_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 70))
+    restart_rect = restart_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 30))
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 70))
 
     screen.blit(restart_text, restart_rect)
     screen.blit(quit_text, quit_rect)
@@ -78,10 +78,12 @@ def scripted_boss_fight(script_name="default_fight"):
                     return "quit"
 
                 # Отрисовка текущего состояния игры
-                screen.fill(WHITE)
+                # screen.fill(WHITE)
+                background = pygame.image.load("data/backgrounds/boss_level_1_background.jpg").convert()
+                background = pygame.transform.scale(background, (WIDTH, HEIGHT))
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
-                        pygame.draw.rect(screen, RED, sprite.rect)
+                        screen.blit(sprite.image, sprite.rect)
                         player.draw_effect_icons(screen)
                     else:
                         screen.blit(sprite.image, sprite.rect)
@@ -159,6 +161,7 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.left < 0:
                 player.rect.x = 0
+            player.set_animation('walk')
 
         if keys[pygame.K_d]:
             player.rect.x += player.current_speed
@@ -168,6 +171,10 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.right > WIDTH:
                 player.rect.x = WIDTH - player.rect.width
+            player.set_animation('walk')
+
+        if not keys[pygame.K_a] and not keys[pygame.K_d]:
+            player.set_animation('idle')
 
         if keys[pygame.K_w]:
             player.jump()
@@ -192,7 +199,7 @@ def scripted_boss_fight(script_name="default_fight"):
         screen.fill(WHITE)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
-                pygame.draw.rect(screen, RED, sprite.rect)
+                screen.blit(sprite.image, sprite.rect)
                 player.draw_effect_icons(screen)
             elif isinstance(sprite, Boss):
                 boss.draw(screen)
