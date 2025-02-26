@@ -144,12 +144,17 @@ class AcidPool(pygame.sprite.Sprite):
 class Boss(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
-        self.width = 100
-        self.height = 150
+        # self.width = 100
+        # self.height = 150
         self.frames = []
         self.load_sprite_sheet("boss_sprite_sheet.png")
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
+        # self.rect = self.image.get_rect(topleft=(WIDTH - 200, HEIGHT - self.height))
+
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+
         self.rect = self.image.get_rect(topleft=(WIDTH - 200, HEIGHT - self.height))
 
         # Анимации

@@ -1,5 +1,16 @@
 import pygame
 from boss_fight.settings import WIDTH, HEIGHT
+import os
+import sys
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('data', 'sprites', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    return image
 
 
 class Projectile(pygame.sprite.Sprite):
@@ -36,8 +47,7 @@ class BigProjectile(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.width = 30
         self.height = 30
-        self.image = pygame.Surface((self.width, self.height))
-        self.image.fill((255, 165, 0))
+        self.image = load_image("big_attack.png")
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
