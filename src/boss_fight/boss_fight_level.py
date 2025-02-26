@@ -465,6 +465,10 @@ def game_loop():
     player = Player(all_sprites)
     boss = Boss(all_sprites)
 
+    # Загрузка изображения фона
+    background = pygame.image.load("data/backgrounds/boss_level_1_background.jpg").convert()
+    background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -562,7 +566,9 @@ def game_loop():
                     player.on_ground = True
                 break
 
-        screen.fill(WHITE)
+        # Отрисовка фона
+        screen.blit(background, (0, 0))
+
         for sprite in all_sprites:
             if isinstance(sprite, Player):
                 pygame.draw.rect(screen, RED, sprite.rect)

@@ -1,11 +1,35 @@
 import pygame
 import random
-from settings import WIDTH, WHITE, RED, FPS, screen
-from boss_fight_player import Player
-from boss import Boss
-from projectile import BigProjectile
-from utils import draw_death_menu
-from boss_script_manager import BossScriptManager
+from boss_fight.settings import WIDTH, HEIGHT, WHITE, RED, FPS, screen
+from boss_fight.boss_fight_player import Player
+from boss_fight.boss import Boss
+from boss_fight.projectile import BigProjectile
+from boss_fight.utils import draw_death_menu
+from boss_fight.boss_script_manager import BossScriptManager
+
+
+def draw_death_menu(screen):
+    # Затемнение экрана
+    dark = pygame.Surface(screen.get_size()).convert_alpha()
+    dark.fill((0, 0, 0, 128))  # Полупрозрачный черный
+    screen.blit(dark, (0, 0))
+
+    # Текст "GAME OVER"
+    font = pygame.font.Font(None, 74)
+    text = font.render('GAME OVER', True, RED)
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+    screen.blit(text, text_rect)
+
+    # Подсказки управления
+    small_font = pygame.font.Font(None, 36)
+    restart_text = small_font.render('Нажмите R для перезапуска', True, WHITE)
+    quit_text = small_font.render('Нажмите Q для выхода', True, WHITE)
+
+    restart_rect = restart_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 30))
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 70))
+
+    screen.blit(restart_text, restart_rect)
+    screen.blit(quit_text, quit_rect)
 
 
 def scripted_boss_fight(script_name="default_fight"):
@@ -13,16 +37,18 @@ def scripted_boss_fight(script_name="default_fight"):
     clock = pygame.time.Clock()
     player = Player(all_sprites)
     boss = Boss(all_sprites)
-
-    # Загружаем скрипт боя
     script_manager = BossScriptManager()
+
     if not script_manager.load_script(script_name):
-        print(f"Error: Script '{script_name}' not found!")
         return "quit"
 
     shield_sequence = script_manager.get_shield_sequence()
     attack_sequence = script_manager.get_attack_sequence()
     random_attacks = script_manager.get_random_attack_config()
+
+    shield_index = 0
+    attack_index = 0
+    last_random_attack_time = 0
 
     frame_counter = 0
     mouse_x, mouse_y = 400, 300
@@ -45,16 +71,19 @@ def scripted_boss_fight(script_name="default_fight"):
                     if event.type == pygame.QUIT:
                         return "quit"
 
-                death_keys = pygame.key.get_pressed()
-                if death_keys[pygame.K_r]:
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_r]:  # Перезапуск
                     return "restart"
-                if death_keys[pygame.K_q]:
+                if keys[pygame.K_q]:  # Выход
                     return "quit"
 
-                screen.fill(WHITE)
+                # Отрисовка текущего состояния игры
+                # screen.fill(WHITE)
+                background = pygame.image.load("data/backgrounds/boss_level_1_background.jpg").convert()
+                background = pygame.transform.scale(background, (WIDTH, HEIGHT))
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
-                        pygame.draw.rect(screen, RED, sprite.rect)
+                        screen.blit(sprite.image, sprite.rect)
                         player.draw_effect_icons(screen)
                     else:
                         screen.blit(sprite.image, sprite.rect)
@@ -62,61 +91,63 @@ def scripted_boss_fight(script_name="default_fight"):
                 boss.vertical_beams.draw(screen)
                 player.projectiles.draw(screen)
                 boss.wave_segments.draw(screen)
+                boss.slow_fields.draw(screen)
+                boss.acid_pools.draw(screen)
 
+                # Отрисовка меню смерти поверх игры
                 draw_death_menu(screen)
                 pygame.display.flip()
                 clock.tick(FPS)
 
-        # Проверяем последовательность щита
-        for shield_action in shield_sequence:
-            if frame_counter == shield_action["time"]:
-                if shield_action["action"] == "activate":
-                    boss.activate_shield()
-                else:
-                    boss.deactivate_shield()
+        # Обработка щита
+        if shield_index < len(shield_sequence):
+            shield_event = shield_sequence[shield_index]
+            if frame_counter == shield_event["time"]:
+                boss.activate_shield()
+            elif frame_counter == shield_event["time"] + shield_event["duration"]:
+                boss.deactivate_shield()
+                shield_index += 1
 
-        # Проверяем заскриптованные атаки
-        for attack in attack_sequence:
-            if frame_counter == attack["time"]:
-                if attack["attack"] == "slow_field":
-                    # Создаем поле в случайной точке рядом с игроком
-                    target_x = player.rect.centerx + random.randint(-100, 100)
-                    target_y = player.rect.centery + random.randint(-100, 100)
-                    boss.SlowFieldAttack(target_x, target_y)
-                elif attack["attack"] == "attraction":
-                    boss.AttractionAttack(player)
-                elif attack["attack"] == "wave":
-                    boss.WaveAttack()
-                elif attack["attack"] == "big":
+        # Обработка атак по скрипту
+        if attack_index < len(attack_sequence):
+            attack_event = attack_sequence[attack_index]
+            if frame_counter == attack_event["time"]:
+                attack_type = attack_event["type"]
+                if attack_type == "BigProjectile":
                     boss.BigProjectileAttack(player)
-                elif attack["attack"] == "vertical":
-                    boss.VerticalBeamAttack(mouse_x)
-                elif attack["attack"] == "acid_pool":
-                    target_x = player.rect.centerx
-                    boss.AcidPoolAttack(target_x)
+                elif attack_type == "Wave":
+                    boss.WaveAttack()
+                elif attack_type == "VerticalBeam":
+                    boss.VerticalBeamAttack(player.rect.centerx)
+                elif attack_type == "Attraction":
+                    boss.AttractionAttack(player)
+                elif attack_type == "SlowField":
+                    boss.SlowFieldAttack(
+                        player.rect.centerx, player.rect.centery)
+                elif attack_type == "AcidPool":
+                    boss.AcidPoolAttack(player.rect.centerx)
+                attack_index += 1
 
-        # Случайные атаки после заскриптованной последовательности
-        if random_attacks and frame_counter > random_attacks["start_time"]:
-            if random.randint(0, random_attacks["interval"]) == 0:
-                attack_type = random.choice(random_attacks["attacks"])
-                if attack_type == "attraction":
-                    boss.AttractionAttack(player)
-                elif attack_type == "wave":
-                    boss.WaveAttack()
-                elif attack_type == "big":
-                    boss.BigProjectileAttack(player)
-                elif attack_type == "vertical":
-                    x = random.randint(100, 700)
-                    boss.VerticalBeamAttack(x)
-                elif attack_type == "shield":
-                    boss.activate_shield()
-                elif attack_type == "slow_field":
-                    target_x = player.rect.centerx + random.randint(-100, 100)
-                    target_y = player.rect.centery + random.randint(-100, 100)
-                    boss.SlowFieldAttack(target_x, target_y)
-                elif attack_type == "acid_pool":
-                    target_x = player.rect.centerx
-                    boss.AcidPoolAttack(target_x)
+        # Случайные атаки
+        if random_attacks and random_attacks["enabled"]:
+            current_time = frame_counter
+            if current_time - last_random_attack_time >= random_attacks["min_delay"]:
+                if random.randint(0, random_attacks["max_delay"] - random_attacks["min_delay"]) == 0:
+                    attack_type = random.choice(random_attacks["types"])
+                    if attack_type == "BigProjectile":
+                        boss.BigProjectileAttack(player)
+                    elif attack_type == "Wave":
+                        boss.WaveAttack()
+                    elif attack_type == "VerticalBeam":
+                        boss.VerticalBeamAttack(player.rect.centerx)
+                    elif attack_type == "Attraction":
+                        boss.AttractionAttack(player)
+                    elif attack_type == "SlowField":
+                        boss.SlowFieldAttack(
+                            player.rect.centerx, player.rect.centery)
+                    elif attack_type == "AcidPool":
+                        boss.AcidPoolAttack(player.rect.centerx)
+                    last_random_attack_time = current_time
 
         frame_counter += 1
 
@@ -130,6 +161,7 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.left < 0:
                 player.rect.x = 0
+            player.set_animation('walk')
 
         if keys[pygame.K_d]:
             player.rect.x += player.current_speed
@@ -139,6 +171,10 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.right > WIDTH:
                 player.rect.x = WIDTH - player.rect.width
+            player.set_animation('walk')
+
+        if not keys[pygame.K_a] and not keys[pygame.K_d]:
+            player.set_animation('idle')
 
         if keys[pygame.K_w]:
             player.jump()
@@ -163,7 +199,7 @@ def scripted_boss_fight(script_name="default_fight"):
         screen.fill(WHITE)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
-                pygame.draw.rect(screen, RED, sprite.rect)
+                screen.blit(sprite.image, sprite.rect)
                 player.draw_effect_icons(screen)
             elif isinstance(sprite, Boss):
                 boss.draw(screen)
