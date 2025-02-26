@@ -17,7 +17,7 @@ def draw_death_menu(screen):
     # Текст "GAME OVER"
     font = pygame.font.Font(None, 74)
     text = font.render('GAME OVER', True, RED)
-    text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2 - 50))
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
     screen.blit(text, text_rect)
 
     # Подсказки управления
@@ -25,8 +25,8 @@ def draw_death_menu(screen):
     restart_text = small_font.render('Нажмите R для перезапуска', True, WHITE)
     quit_text = small_font.render('Нажмите Q для выхода', True, WHITE)
 
-    restart_rect = restart_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 30))
-    quit_rect = quit_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 70))
+    restart_rect = restart_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 30))
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 70))
 
     screen.blit(restart_text, restart_rect)
     screen.blit(quit_text, quit_rect)
@@ -81,7 +81,6 @@ def scripted_boss_fight(script_name="default_fight"):
                 screen.fill(WHITE)
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
-                        # pygame.draw.rect(screen, RED, sprite.rect)
                         screen.blit(sprite.image, sprite.rect)
                         player.draw_effect_icons(screen)
                     else:
@@ -198,7 +197,6 @@ def scripted_boss_fight(script_name="default_fight"):
         screen.fill(WHITE)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
-                # pygame.draw.rect(screen, RED, sprite.rect)
                 screen.blit(sprite.image, sprite.rect)
                 player.draw_effect_icons(screen)
             elif isinstance(sprite, Boss):

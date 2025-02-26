@@ -127,7 +127,6 @@ class Player(pygame.sprite.Sprite):
             self.shoot_cooldown = 20
 
     def update(self):
-        print(f"Player position after update: {self.rect.topleft}")
         # Обновление анимации
         self.animation_frame = (self.animation_frame + self.animation_speed) % len(
             self.animations[self.current_animation])
