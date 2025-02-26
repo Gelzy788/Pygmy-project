@@ -67,15 +67,12 @@ def start_level(user_id, level):
             print(f"Ошибка: не найден скрипт для уровня {level}")
             return "quit"
     else:
-        # Получаем путь к start_round.py относительно launcher.py
         start_round_path = os.path.join(
             os.path.dirname(__file__), 'bots', 'start_round.py')
 
-        # Закрываем текущее окно pygame перед запуском нового уровня
         pygame.display.quit()
         pygame.quit()
 
-        # Запускаем уровень через start_round.py с передачей user_id
         try:
             subprocess.run(
                 [sys.executable, start_round_path, str(level), str(user_id)], check=True)
