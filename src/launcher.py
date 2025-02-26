@@ -9,7 +9,7 @@ from database import Database
 # Инициализация Pygame
 pygame.init()
 
-# Настройки экрана
+# Настройки экран
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Vampire Game Launcher")
