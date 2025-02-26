@@ -17,7 +17,7 @@ def load_image(name, colorkey=None):
 class Player(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
-        self.height = 100
+        self.height = 68
         self.crouch_height = 50
         self.width = 50
 
@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
         data_dir = os.path.join(root_dir, 'data')
         sprites_dir = os.path.join(data_dir, 'sprites')
 
-        sprite_path = os.path.join(sprites_dir, 'main_person.jpg')
+        sprite_path = os.path.join(sprites_dir, 'main_person.png')
         self.load_sprite_sheet(sprite_path)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
@@ -52,6 +52,9 @@ class Player(pygame.sprite.Sprite):
         self.animation_frame = 0
         self.animation_speed = 0.2
         self.animation_time = 0
+
+        self.rect.x = 100  # Начальная позиция по X
+        self.rect.y = HEIGHT - self.height
 
         # Создаем иконки эффектов
         self.slow_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
@@ -82,13 +85,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = 100
         self.rect.y = HEIGHT - self.height
 
-    # def _get_sprite(self, sheet, column, row, width, height):
-    #     """Получает отдельный спрайт из спрайтшита"""
-    #     image = pygame.Surface((width, height), pygame.SRCALPHA)
-    #     image.blit(sheet, (0, 0), (column * width,
-    #                row * height, width, height))
-    #     return pygame.transform.scale(image, (self.width, self.height))
-
     def load_sprite_sheet(self, sprite_path):
         """Загружает и нарезает спрайтшит"""
         sprite_sheet = load_image(sprite_path)
@@ -105,6 +101,7 @@ class Player(pygame.sprite.Sprite):
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sprite_sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
+
                 
         # self.animations = {
         #     'idle': [self._get_sprite(sprite_sheet, 0, 0, sprite_width, sprite_height)],

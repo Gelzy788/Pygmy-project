@@ -81,7 +81,8 @@ def scripted_boss_fight(script_name="default_fight"):
                 screen.fill(WHITE)
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
-                        pygame.draw.rect(screen, RED, sprite.rect)
+                        # pygame.draw.rect(screen, RED, sprite.rect)
+                        screen.blit(sprite.image, sprite.rect)
                         player.draw_effect_icons(screen)
                     else:
                         screen.blit(sprite.image, sprite.rect)
@@ -192,7 +193,8 @@ def scripted_boss_fight(script_name="default_fight"):
         screen.fill(WHITE)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
-                pygame.draw.rect(screen, RED, sprite.rect)
+                # pygame.draw.rect(screen, RED, sprite.rect)
+                screen.blit(sprite.image, sprite.rect)
                 player.draw_effect_icons(screen)
             elif isinstance(sprite, Boss):
                 boss.draw(screen)
