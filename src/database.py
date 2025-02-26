@@ -4,7 +4,7 @@ import os
 
 class Database:
     def __init__(self):
-        # Путь к папке data относительно корняn проект
+        # Путь к папке data относительно корняn проек
         data_path = os.path.join(os.path.dirname(
             os.path.dirname(__file__)), 'data')
 
