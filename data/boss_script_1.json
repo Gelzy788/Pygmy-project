@@ -1,0 +1,55 @@
+{
+    "shield_sequence": [
+        {
+            "time": 300,
+            "duration": 120
+        },
+        {
+            "time": 600,
+            "duration": 120
+        },
+        {
+            "time": 900,
+            "duration": 120
+        }
+    ],
+    "attack_sequence": [
+        {
+            "time": 60,
+            "type": "BigProjectile"
+        },
+        {
+            "time": 180,
+            "type": "Wave"
+        },
+        {
+            "time": 420,
+            "type": "VerticalBeam"
+        },
+        {
+            "time": 540,
+            "type": "Attraction"
+        },
+        {
+            "time": 780,
+            "type": "SlowField"
+        },
+        {
+            "time": 840,
+            "type": "AcidPool"
+        }
+    ],
+    "random_attacks": {
+        "enabled": true,
+        "min_delay": 120,
+        "max_delay": 240,
+        "types": [
+            "BigProjectile",
+            "Wave",
+            "VerticalBeam",
+            "Attraction",
+            "SlowField",
+            "AcidPool"
+        ]
+    }
+}
