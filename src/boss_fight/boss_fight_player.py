@@ -1,6 +1,7 @@
 import pygame
 from boss_fight.settings import WIDTH, HEIGHT, GRAVITY, JUMP_STRENGTH
 from boss_fight.projectile import PlayerProjectile
+import os
 
 
 class Player(pygame.sprite.Sprite):
@@ -8,17 +9,29 @@ class Player(pygame.sprite.Sprite):
         super().__init__(*group)
         self.height = 100
         self.crouch_height = 50
-        self.rect = pygame.Rect(100, HEIGHT - self.height, 50, self.height)
+        self.width = 50
+
+        # Инициализируем базовые атрибуты до загрузки спрайтов
         self.velocity_y = 0
         self.on_ground = True
         self.hp = 100
         self.projectiles = pygame.sprite.Group()
         self.shoot_cooldown = 0
-        self.speed_multiplier = 1.0  # Множитель скорости
-        self.base_speed = 5  # Базовая скорость движения
-        self.slow_duration = 0  # Длительность эффекта замедления
-        self.poison_duration = 0  # Длительность эффекта яда
-        self.poison_damage_timer = 0  # Таймер для урона от яда
+        self.speed_multiplier = 1.0
+        self.base_speed = 5
+        self.current_speed = self.base_speed
+        self.slow_duration = 0
+        self.poison_duration = 0
+        self.poison_damage_timer = 0
+        self.is_crouching = False
+        self.is_dead = False
+        self.facing_right = True
+
+        # Анимация
+        self.current_animation = 'idle'
+        self.animation_frame = 0
+        self.animation_speed = 0.2
+        self.animation_time = 0
 
         # Создаем иконки эффектов
         self.slow_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
@@ -34,6 +47,111 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.polygon(self.poison_icon, (0, 180, 0, 200),
                             # Темно-зеленый череп
                             [(10, 4), (16, 16), (4, 16)])
+
+        # Загрузка спрайтов
+        try:
+            root_dir = os.path.dirname(os.path.dirname(
+                os.path.dirname(__file__)))  # путь к src
+            data_dir = os.path.join(root_dir, 'data')
+            sprites_dir = os.path.join(data_dir, 'sprites')
+
+            # Создаем директории, если их нет
+            os.makedirs(sprites_dir, exist_ok=True)
+
+            sprite_path = os.path.join(sprites_dir, 'main_person.jpg')
+            print(
+                f"Пытаюсь загрузить спрайт из: {os.path.abspath(sprite_path)}")
+
+            if not os.path.exists(sprite_path):
+                print("No")
+            else:
+                self.load_sprite_sheet(sprite_path)
+
+        except Exception as e:
+            print(f"ОШИБКА при загрузке спрайта: {e}")
+            self.create_debug_sprite()
+
+        # Инициализация спрайта
+        self.rect = self.image.get_rect()
+        self.rect.x = 100
+        self.rect.y = HEIGHT - self.height
+
+    def load_sprite_sheet(self, sprite_path):
+        """Загружает и нарезает спрайтшит"""
+        try:
+            sprite_sheet = pygame.image.load(sprite_path).convert_alpha()
+            print(
+                f"Спрайт успешно загружен. Размеры: {sprite_sheet.get_size()}")
+
+            sprite_width = sprite_sheet.get_width() // 7
+            sprite_height = sprite_sheet.get_height() // 6
+
+            print(f"Размеры одного спрайта: {sprite_width}x{sprite_height}")
+
+            self.animations = {
+                'idle': [self._get_sprite(sprite_sheet, 0, 0, sprite_width, sprite_height)],
+                'walk': [self._get_sprite(sprite_sheet, x, 1, sprite_width, sprite_height)
+                         for x in range(6)],
+                'crouch': [self._get_sprite(sprite_sheet, x, 2, sprite_width, sprite_height)
+                           for x in range(2)],
+                'uncrouch': [self._get_sprite(sprite_sheet, x, 2, sprite_width, sprite_height)
+                             for x in range(2, 4)],
+                'jump': [self._get_sprite(sprite_sheet, x, 3, sprite_width, sprite_height)
+                         for x in range(6)],
+                'death': [self._get_sprite(sprite_sheet, x, 5, sprite_width, sprite_height)
+                          for x in range(5)]
+            }
+
+            # Устанавливаем начальный спрайт
+            self.image = self.animations['idle'][0]
+            print("Все анимации успешно загружены")
+            # Отладочная информация
+            for anim_name, frames in self.animations.items():
+                print(f"Анимация {anim_name}: {len(frames)} кадров")
+                if not frames:
+                    print(f"ОШИБКА: Нет кадров для анимации {anim_name}")
+
+        except Exception as e:
+            print(f"ОШИБКА при загрузке спрайтшита: {e}")
+            self.create_debug_sprite()
+
+    def _get_sprite(self, sheet, column, row, width, height):
+        """Получает отдельный спрайт из спрайтшита"""
+        image = pygame.Surface((width, height), pygame.SRCALPHA)
+        image.blit(sheet, (0, 0), (column * width,
+                   row * height, width, height))
+        return pygame.transform.scale(image, (self.width, self.height))
+
+    def set_animation(self, animation_name):
+        """Устанавливает текущую анимацию"""
+        if animation_name in self.animations and self.current_animation != animation_name:
+            print(f"Смена анимации на: {animation_name}")  # Отладочный вывод
+            self.current_animation = animation_name
+            self.animation_frame = 0
+            self.animation_time = 0
+            # Сразу устанавливаем первый кадр новой анимации
+            self.image = self.animations[animation_name][0]
+            if not self.facing_right:
+                self.image = pygame.transform.flip(self.image, True, False)
+            # Отладочная информация
+            print(f"Установлен спрайт размером: {self.image.get_size()}")
+
+    def update_animation(self):
+        """Обновляет текущий кадр анимации"""
+        self.animation_time += self.animation_speed
+        if self.animation_time >= 1:
+            self.animation_time = 0
+            self.animation_frame = (
+                self.animation_frame + 1) % len(self.animations[self.current_animation])
+
+        # Получаем текущий кадр
+        current_frame = self.animations[self.current_animation][self.animation_frame]
+
+        # Отражаем спрайт, если нужно
+        if not self.facing_right:
+            current_frame = pygame.transform.flip(current_frame, True, False)
+
+        self.image = current_frame
 
     def shoot(self, target_x, target_y):
         if self.shoot_cooldown <= 0:
