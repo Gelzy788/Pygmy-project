@@ -12,7 +12,7 @@ pygame.init()
 # Настройки экрана
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Boss Fight Launcher")
+pygame.display.set_caption("Vampire Game Launcher")
 
 # Цвета
 WHITE = (255, 255, 255)
@@ -25,7 +25,7 @@ font = pygame.font.Font(None, 74)
 button_font = pygame.font.Font(None, 50)
 save_font = pygame.font.Font(None, 36)
 
-# База данных
+# База данныхwdddww
 db = Database()
 
 

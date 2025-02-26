@@ -78,7 +78,9 @@ def scripted_boss_fight(script_name="default_fight"):
                     return "quit"
 
                 # Отрисовка текущего состояния игры
-                screen.fill(WHITE)
+                # screen.fill(WHITE)
+                background = pygame.image.load("data/backgrounds/boss_level_1_background.jpg").convert()
+                background = pygame.transform.scale(background, (WIDTH, HEIGHT))
                 for sprite in all_sprites:
                     if isinstance(sprite, Player):
                         screen.blit(sprite.image, sprite.rect)
