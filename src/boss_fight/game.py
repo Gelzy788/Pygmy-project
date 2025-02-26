@@ -160,6 +160,7 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.left < 0:
                 player.rect.x = 0
+            player.set_animation('walk')
 
         if keys[pygame.K_d]:
             player.rect.x += player.current_speed
@@ -169,6 +170,10 @@ def scripted_boss_fight(script_name="default_fight"):
                     break
             if player.rect.right > WIDTH:
                 player.rect.x = WIDTH - player.rect.width
+            player.set_animation('walk')
+
+        if not keys[pygame.K_a] and not keys[pygame.K_d]:
+            player.set_animation('idle')
 
         if keys[pygame.K_w]:
             player.jump()

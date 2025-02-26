@@ -73,6 +73,7 @@ def start_level(user_id, level):
         pygame.display.quit()
         pygame.quit()
 
+        # Запускаем уровень через start_round.py с передачей user_id
         try:
             subprocess.run(
                 [sys.executable, start_round_path, str(level), str(user_id)], check=True)

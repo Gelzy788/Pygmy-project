@@ -14,6 +14,7 @@ def load_image(name, colorkey=None):
     image = pygame.image.load(fullname)
     return image
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, *group):
         super().__init__(*group)
@@ -22,6 +23,12 @@ class Player(pygame.sprite.Sprite):
         self.width = 50
 
         # Инициализируем базовые атрибуты до загрузки спрайтов
+        root_dir = os.path.dirname(os.path.dirname(
+            os.path.dirname(__file__)))
+        data_dir = os.path.join(root_dir, 'data')
+        sprites_dir = os.path.join(data_dir, 'sprites')
+        sprite_path = os.path.join(sprites_dir, 'main_person.png')
+
         self.velocity_y = 0
         self.on_ground = True
         self.hp = 100
@@ -37,12 +44,6 @@ class Player(pygame.sprite.Sprite):
         self.is_dead = False
         self.facing_right = True
         self.frames = []
-        root_dir = os.path.dirname(os.path.dirname(
-            os.path.dirname(__file__))) 
-        data_dir = os.path.join(root_dir, 'data')
-        sprites_dir = os.path.join(data_dir, 'sprites')
-
-        sprite_path = os.path.join(sprites_dir, 'main_person.png')
         self.load_sprite_sheet(sprite_path)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
@@ -53,9 +54,13 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.2
         self.animation_time = 0
 
+        self.rect = self.image.get_rect()
         self.rect.x = 100  # Начальная позиция по X
-        self.rect.y = HEIGHT - self.height
+        self.rect.y = 60
 
+        print(f"HEIGHT: {HEIGHT}")
+        print(f"Player height: {self.height}")
+        print(f"Player initial position: {self.rect.topleft}")
         # Создаем иконки эффектов
         self.slow_icon = pygame.Surface((20, 20), pygame.SRCALPHA)
         pygame.draw.circle(self.slow_icon, (0, 191, 255, 200),
@@ -70,7 +75,7 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.polygon(self.poison_icon, (0, 180, 0, 200),
                             # Темно-зеленый череп
                             [(10, 4), (16, 16), (4, 16)])
-        
+
         print(
             f"Пытаюсь загрузить спрайт из: {os.path.abspath(sprite_path)}")
 
@@ -78,12 +83,6 @@ class Player(pygame.sprite.Sprite):
             print("No")
         else:
             self.load_sprite_sheet(sprite_path)
-
-
-        # Инициализация спрайта
-        self.rect = self.image.get_rect()
-        self.rect.x = 100
-        self.rect.y = HEIGHT - self.height
 
     def load_sprite_sheet(self, sprite_path):
         """Загружает и нарезает спрайтшит"""
@@ -94,7 +93,7 @@ class Player(pygame.sprite.Sprite):
         sprite_width = sprite_sheet.get_width() // 7
         sprite_height = sprite_sheet.get_height() // 6
 
-        self.rect = pygame.Rect(0, 0, sprite_sheet.get_width() // 6, 
+        self.rect = pygame.Rect(0, 0, sprite_sheet.get_width() // 6,
                                 sprite_sheet.get_height() // 7)
         for j in range(7):
             for i in range(6):
@@ -102,29 +101,26 @@ class Player(pygame.sprite.Sprite):
                 self.frames.append(sprite_sheet.subsurface(pygame.Rect(
                     frame_location, self.rect.size)))
 
-                
-        # self.animations = {
-        #     'idle': [self._get_sprite(sprite_sheet, 0, 0, sprite_width, sprite_height)],
-        #     'walk': [self._get_sprite(sprite_sheet, x, 1, sprite_width, sprite_height)
-        #                 for x in range(6)],
-        #     'crouch': [self._get_sprite(sprite_sheet, x, 2, sprite_width, sprite_height)
-        #                 for x in range(2)],
-        #     'uncrouch': [self._get_sprite(sprite_sheet, x, 2, sprite_width, sprite_height)
-        #                     for x in range(2, 4)],
-        #     'jump': [self._get_sprite(sprite_sheet, x, 3, sprite_width, sprite_height)
-        #                 for x in range(6)],
-        #     'death': [self._get_sprite(sprite_sheet, x, 5, sprite_width, sprite_height)
-        #                 for x in range(5)]
-        # }
+        # Определение анимаций
+        self.animations = {
+            'idle': [self.frames[0]],  # 1 кадр - стоит
+            'walk': self.frames[6:12],  # с 7 по 12 кадр - ходьба
+            'crouch': self.frames[12:14],  # 13-14 - присяд
+            'uncrouch': self.frames[14:16],  # 15-16 - встать с присяда
+            'jump': self.frames[18:24],  # 19-24 - прыжок
+            'death': self.frames[30:35]  # 31-35 - смерть
+        }
 
-        # Устанавливаем начальный спрайт
-        # self.image = self.animations['idle'][0]
-        # print("Все анимации успешно загружены")
-        # # Отладочная информация
-        # for anim_name, frames in self.animations.items():
-        #     print(f"Анимация {anim_name}: {len(frames)} кадров")
-        #     if not frames:
-        #         print(f"ОШИБКА: Нет кадров для анимации {anim_name}")
+        # Устанавливаем начальную анимацию
+        self.current_animation = 'idle'
+        self.animation_frame = 0
+        self.image = self.animations[self.current_animation][self.animation_frame]
+
+    def set_animation(self, animation_name):
+        if self.current_animation != animation_name:
+            self.current_animation = animation_name
+            self.animation_frame = 0
+            self.image = self.animations[self.current_animation][self.animation_frame]
 
     def shoot(self, target_x, target_y):
         if self.shoot_cooldown <= 0:
@@ -133,11 +129,11 @@ class Player(pygame.sprite.Sprite):
             self.shoot_cooldown = 20
 
     def update(self):
-        # print(self.cur_frame, self.frames)
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = self.frames[self.cur_frame]
-
-        print(self.cur_frame)
+        print(f"Player position after update: {self.rect.topleft}")
+        # Обновление анимации
+        self.animation_frame = (self.animation_frame + self.animation_speed) % len(
+            self.animations[self.current_animation])
+        self.image = self.animations[self.current_animation][int(self.animation_frame)]
 
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
@@ -174,18 +170,21 @@ class Player(pygame.sprite.Sprite):
         if self.on_ground:
             self.velocity_y = -JUMP_STRENGTH
             self.on_ground = False
+            self.set_animation('jump')
 
     def crouch(self):
         if self.rect.height != self.crouch_height:
             old_bottom = self.rect.bottom
             self.rect.height = self.crouch_height
             self.rect.bottom = old_bottom
+            self.set_animation('crouch')
 
     def stand(self):
         if self.rect.height != self.height:
             old_bottom = self.rect.bottom
             self.rect.height = self.height
             self.rect.bottom = old_bottom
+            self.set_animation('uncrouch')
 
     def draw_effect_icons(self, screen):
         # Отрисовка иконки замедления
@@ -207,5 +206,3 @@ class Player(pygame.sprite.Sprite):
             pygame.draw.rect(screen, (128, 128, 128), (40, 62, 20, 3))
             pygame.draw.rect(screen, (124, 252, 0),
                              (40, 62, duration_width, 3))
-
-    # ... остальные методы класса Player ...
